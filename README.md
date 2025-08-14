@@ -16,7 +16,7 @@ A modern music streaming application built with Angular 20, similar to Spotify b
 - 📋 **Playlist Management** - Create, edit, delete personal playlists
 - ❤️ **Favorites System** - Like/unlike songs and albums
 - 👥 **Social Features** - Follow users, view their playlists
-- 🔍 **Search & Discovery** - Find songs, artists, albums, users
+- 🔍 **Search & Discovery** - Find songs, artists, albums, users drdd
 - 📚 **Music Library** - Personal collection management
 - 🎵 **Recently Played** - Track listening history
 

@@ -1,0 +1,102 @@
+
+  /* Component-scoped styles */
+  .ecommerce-page {
+    min-height: 100vh;
+    background-color: #f8f9fa;
+  }
+
+  /* Navbar enhancements */
+  .navbar {
+    border-bottom: 1px solid #e9ecef;
+    transition: box-shadow 0.3s ease;
+  }
+
+  .navbar.shadow-sm {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+  }
+
+  /* Focus states for accessibility */
+  .navbar-nav .nav-link:focus,
+  .dropdown-item:focus,
+  .btn:focus {
+    outline: 2px solid #0d6efd;
+    outline-offset: 2px;
+  }
+
+  /* Search bar styling */
+  .dropdown-toggle::after {
+    margin-left: 0.5em;
+  }
+
+  /* Category navigation active state */
+  .nav-link.active {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    border-radius: 4px;
+  }
+
+  /* Product cards hover effect */
+  .product-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .product-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  }
+
+  /* Cart badge positioning */
+  .position-absolute.badge {
+    font-size: 0.75rem;
+  }
+
+  /* Mobile responsive adjustments */
+  @media (max-width: 767px) {
+    .navbar-brand {
+      font-size: 1.5rem !important;
+    }
+    
+    .hero-banner {
+      padding: 2rem !important;
+    }
+    
+    .hero-banner .display-4 {
+      font-size: 2rem;
+    }
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    .navbar {
+      border-bottom: 2px solid #000;
+    }
+    
+    .product-card:hover {
+      outline: 2px solid #000;
+    }
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    .product-card,
+    .navbar {
+      transition: none;
+    }
+  }
+
+  /* Skip to main content link */
+  .skip-link {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: #000;
+    color: #fff;
+    padding: 8px;
+    text-decoration: none;
+    z-index: 1000;
+  }
+
+  .skip-link:focus {
+    top: 6px;
+  }
+
+
