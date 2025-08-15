@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { ProductListComponent} from './pages/product-list/product-list';
 import { RouterOutlet } from '@angular/router';
 
 export interface Product {
@@ -10,13 +11,14 @@ export interface Product {
   price: number;
   image: string;
   rating: number;
-  reviewCount: number;
+  reviewCount:  number;
 }
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, CommonModule, FormsModule],
+  imports: [RouterOutlet, CommonModule, FormsModule,ProductListComponent],
+
   templateUrl: './app.html',
   styleUrls: ['./app.scss']
 })

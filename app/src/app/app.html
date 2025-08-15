@@ -30,9 +30,9 @@
       <div class="collapse navbar-collapse" id="navbarContent">
         
         <!-- Search Section -->
-        <div class="flex-grow-1 mx-3 my-2 my-lg-0">
-          <form class="d-flex position-relative" role="search" aria-label="Product search" (ngSubmit)="onSearch()">
-            
+        <div class=" flex-grow-1 mx-3 my-2 my-lg-0 ">
+          <form class="search-bar d-flex position-relative" role="search" aria-label="Product search" (ngSubmit)="onSearch()">
+
             <!-- Category Dropdown -->
             <div class="dropdown">
               <button 
@@ -61,7 +61,8 @@
               aria-label="Search products"
               [(ngModel)]="searchTerm"
               name="searchTerm"
-              style="border-left: 1; border-right: 1;">
+              style="border-left: 1px solid orange; border-right: 1px solid orange;">
+
 
             <!-- Search Button -->
             <button 
@@ -207,3 +208,5 @@
   </main>
 </div>
 
+<app-product-list></app-product-list>
+<router-outlet></router-outlet>

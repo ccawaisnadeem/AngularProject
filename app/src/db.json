@@ -1,0 +1,52 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "title": "Wireless Headphones",
+      "price": 89.99,
+      "description": "Premium wireless headphones with noise cancellation and 20-hour battery life",
+      "category": "electronics",
+      "image": "https://via.placeholder.com/150/FF0000/FFFFFF?text=Headphones"
+    },
+    {
+      "id": 2,
+      "title": "Smart Watch",
+      "price": 199.99,
+      "description": "Fitness tracker with heart rate monitor, sleep tracking, and 7-day battery life",
+      "category": "electronics",
+      "image": "https://via.placeholder.com/150/0000FF/FFFFFF?text=Watch"
+    },
+    {
+      "id": 3,
+      "title": "Laptop Backpack",
+      "price": 49.99,
+      "description": "Water-resistant backpack with laptop compartment and USB charging port",
+      "category": "accessories",
+      "image": "https://via.placeholder.com/150/00FF00/FFFFFF?text=Backpack"
+    },
+    {
+      "id": 4,
+      "title": "Coffee Maker",
+      "price": 79.99,
+      "description": "Programmable coffee maker with thermal carafe and auto shut-off feature",
+      "category": "home",
+      "image": "https://via.placeholder.com/150/FF00FF/FFFFFF?text=Coffee"
+    },
+    {
+      "id": 5,
+      "title": "Bluetooth Speaker",
+      "price": 59.99,
+      "description": "Portable waterproof Bluetooth speaker with 12-hour playtime",
+      "category": "electronics",
+      "image": "https://via.placeholder.com/150/FFFF00/000000?text=Speaker"
+    },
+    {
+      "id": 6,
+      "title": "Yoga Mat",
+      "price": 29.99,
+      "description": "Non-slip yoga mat with alignment markings and carrying strap",
+      "category": "fitness",
+      "image": "https://via.placeholder.com/150/00FFFF/000000?text=Yoga"
+    }
+  ]
+}

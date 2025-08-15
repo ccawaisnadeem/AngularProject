@@ -19,8 +19,8 @@
   .navbar-nav .nav-link:focus,
   .dropdown-item:focus,
   .btn:focus {
-    outline: 2px solid #0d6efd;
-    outline-offset: 2px;
+    outline: 3px solid orange;
+    outline-offset: 0px;
   }
 
   /* Search bar styling */
@@ -47,6 +47,13 @@
   /* Cart badge positioning */
   .position-absolute.badge {
     font-size: 0.75rem;
+  }
+  .search-bar input:focus {
+    border: 3px solid orange !important;
+    outline: 3px solid orange !important;
+    box-shadow: none;
+   
+
   }
 
   /* Mobile responsive adjustments */
