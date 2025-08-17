@@ -1,8 +1,10 @@
+
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ProductListComponent} from './pages/product-list/product-list';
 import { RouterOutlet } from '@angular/router';
+import {LocationComponent} from './location/location'
 
 export interface Product {
   id: number;
@@ -17,7 +19,7 @@ export interface Product {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, CommonModule, FormsModule,ProductListComponent],
+  imports: [RouterOutlet, CommonModule, FormsModule,ProductListComponent,LocationComponent],
 
   templateUrl: './app.html',
   styleUrls: ['./app.scss']
