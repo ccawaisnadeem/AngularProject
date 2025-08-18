@@ -83,7 +83,7 @@
 
 /* Description text */
 .description {
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   color: #565959;
   margin-bottom: 12px;
   height: 3em;
@@ -96,7 +96,7 @@
 
 /* Add to cart button */
 .add-to-cart {
-  width: 100%;
+  width: 40%;
   background-color: #FFD814;
   border: 1px solid #FCD200;
   border-radius: 20px;
@@ -110,6 +110,8 @@
 
 .add-to-cart:hover {
   background-color: #F7CA00;
+  border: 1.5px solid  orange;
+  border-radius: 20px;
 }
 
 /* Loading spinner */

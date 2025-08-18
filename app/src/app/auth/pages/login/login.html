@@ -1,0 +1,121 @@
+<div class="auth-page">
+  <!-- Shop Logo -->
+  <div class="text-center mb-4">
+    <a routerLink="/home">
+      <h1 class="logo">E-SHOP</h1>
+    </a>
+  </div>
+  
+  <!-- Auth Content -->
+  <div class="auth-box">
+    <div class="auth-header">
+      <h2>Sign in or create account</h2>
+    </div>
+
+    <div *ngIf="errorMessage" class="alert alert-danger">
+      {{ errorMessage }}
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
+      <!-- Email field -->
+      <div class="form-group">
+        <label for="email">Enter email or mobile phone number</label>
+        <input
+          type="email"
+          id="email"
+          formControlName="email"
+          class="form-control"
+          [ngClass]="{ 'is-invalid': submitted && f['email'].errors }"
+        />
+        <div *ngIf="submitted && f['email'].errors" class="invalid-feedback">
+          <div *ngIf="f['email'].errors['required']">Email is required</div>
+          <div *ngIf="f['email'].errors['email']">Please enter a valid email address</div>
+        </div>
+      </div>
+
+      <!-- Continue button -->
+      <button type="button" class="btn btn-primary btn-block" (click)="showPassword = true" *ngIf="!showPassword">
+        Continue
+      </button>
+
+      <!-- Password field (shown after Continue) -->
+      <div *ngIf="showPassword" class="password-section">
+        <div class="form-group mt-3">
+          <div class="password-header">
+            <label for="password">Password</label>
+            <a routerLink="/auth/forgot-password" class="forgot-link">Forgot password?</a>
+          </div>
+          <input
+            type="password"
+            id="password"
+            formControlName="password"
+            class="form-control"
+            [ngClass]="{ 'is-invalid': submitted && f['password'].errors }"
+          />
+          <div *ngIf="submitted && f['password'].errors" class="invalid-feedback">
+            <div *ngIf="f['password'].errors['required']">Password is required</div>
+            <div *ngIf="f['password'].errors['minlength']">Password must be at least 6 characters</div>
+          </div>
+        </div>
+
+        <!-- Sign In button -->
+        <button type="submit" class="btn btn-primary btn-block" [disabled]="loading">
+          <span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>
+          Sign in
+        </button>
+      </div>
+    </form>
+
+    <div class="terms-notice">
+      By continuing, you agree to E-Shop's 
+      <a href="#">Conditions of Use</a> and <a href="#">Privacy Notice</a>.
+    </div>
+
+    <div class="auth-divider"></div>
+
+    <div class="new-to-shop">
+      <span class="new-user-label">New to E-Shop?</span>
+      <a routerLink="/auth/register" class="btn btn-secondary btn-block">Create your E-Shop account</a>
+    </div>
+    
+    <!-- OAuth buttons -->
+    <div class="oauth-section mt-4">
+      <div class="oauth-divider">
+        <span>Or sign in with</span>
+      </div>
+      
+      <div class="oauth-buttons">
+        <button type="button" class="btn btn-oauth" (click)="loginWithGoogle()">
+          <img src="assets/icons/google.svg" alt="Google" class="oauth-icon" />
+          Google
+        </button>
+        
+        <button type="button" class="btn btn-oauth" (click)="loginWithGitHub()">
+          <img src="assets/icons/github.svg" alt="GitHub" class="oauth-icon" />
+          GitHub
+        </button>
+        
+        <button type="button" class="btn btn-oauth" (click)="loginWithFacebook()">
+          <img src="assets/icons/facebook.svg" alt="Facebook" class="oauth-icon" />
+          Facebook
+        </button>
+      </div>
+    </div>
+  </div>
+
+    <!-- Footer -->
+    <div class="auth-footer mt-4">
+      <div class="container">
+        <div class="divider mb-3"></div>
+        <div class="row text-center">
+          <div class="col-12">
+            <p class="text-muted small mb-2">© 2024 E-Shop. All rights reserved.</p>
+            <p class="text-muted small">
+              <a href="#" class="text-decoration-none text-muted me-3">Privacy Policy</a>
+              <a href="#" class="text-decoration-none text-muted me-3">Terms of Service</a>
+              <a href="#" class="text-decoration-none text-muted">Help</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>

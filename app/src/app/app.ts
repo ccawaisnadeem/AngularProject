@@ -1,10 +1,6 @@
 
 import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
-import { ProductListComponent} from './pages/product-list/product-list';
 import { RouterOutlet } from '@angular/router';
-import {LocationComponent} from './location/location'
 
 export interface Product {
   id: number;
@@ -19,17 +15,17 @@ export interface Product {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, CommonModule, FormsModule,ProductListComponent,LocationComponent],
-
+  imports: [RouterOutlet],
   templateUrl: './app.html',
   styleUrls: ['./app.scss']
 })
 export class App {
-  // Component properties
   searchTerm: string = '';
-  selectedCategory: string = 'All';
-  cartItemCount: number = 3;
-  activeCategory: string = 'deals';
+  selectedCategory: string = 'All Categories';
+  activeCategory: string = '';
+  cartItemCount: number = 0;
+  
+  constructor() {}
 
   featuredProducts: Product[] = [
     {

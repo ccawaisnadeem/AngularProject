@@ -1,1 +1,21 @@
-<p>home works!</p>
+<!-- E-commerce Home Content -->
+
+<!-- Hero Section -->
+<section class="hero-banner bg-gradient rounded-3 p-5 mb-5 text-center text-white" 
+         style="background: linear-gradient(135deg, #0d6efd 0%, #6f42c1 100%);"
+         aria-labelledby="hero-title">
+  <h1 id="hero-title" class="display-4 fw-bold mb-3">Welcome to E Shop</h1>
+  <p class="lead mb-4">Discover amazing products with fast shipping and great prices</p>
+  <button class="btn btn-warning btn-lg px-4 py-2" (click)="scrollToProducts()">
+    Shop Now
+  </button>
+</section>
+
+<!-- Featured Products -->
+<section aria-labelledby="featured-title">
+  <h2 id="featured-title" class="h3 fw-bold text-center mb-4" style="color: white;">Featured Products</h2>
+  
+  <div class="row g-4" id="products-section">
+    <app-product-list></app-product-list>
+  </div>
+</section>

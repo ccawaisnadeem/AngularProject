@@ -1,8 +1,10 @@
 
+@use 'sass:color';
+
   /* Component-scoped styles */
   .ecommerce-page {
     min-height: 100vh;
-    background-color: #f8f9fa;
+    background-color: #9c9c9c;
   }
 
   /* Navbar enhancements */
@@ -105,5 +107,16 @@
   .skip-link:focus {
     top: 6px;
   }
+/* Dropdown styles moved to global styles */
 
+#categoryDropdown{
+  color:#e9ecef;
+   background-color: grey;
+}
+#categoryDropdown:hover {
+  background-color: color.adjust(grey, $lightness: -5%);
+}
+.navbar-toggler-icon{
+  color: #fff;
 
+}

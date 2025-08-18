@@ -1,0 +1,179 @@
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterOutlet, RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { LocationComponent } from '../location/location';
+import { AuthService } from '../auth/services/auth.service';
+
+@Component({
+  selector: 'app-main-layout',
+  standalone: true,
+  imports: [CommonModule, RouterOutlet, RouterLink, FormsModule, LocationComponent],
+  template: `
+    <!-- home.html - Angular v20 + Bootstrap 5 E-commerce Page -->
+    <div class="ecommerce-page">
+      <!-- Navbar -->
+      <nav class="navbar navbar-expand-lg navbar-light bg-black sticky-top shadow-sm" role="navigation" aria-label="Main navigation">
+        <div class="container-fluid px-3">
+          
+          <!-- Brand Logo -->
+          <a class="navbar-brand fw-bold text-light fs-3 me-4" routerLink="/home" aria-label="EShop Home">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" class="me-2" aria-hidden="true">
+              <path d="M7 4V2C7 1.45 7.45 1 8 1H16C16.55 1 17 1.45 17 2V4H20C20.55 4 21 4.45 21 5S20.55 6 20 6H19V17C19 18.1 18.1 19 17 19H7C5.9 19 5 18.1 5 17V6H4C3.45 6 3 5.55 3 5S3.45 4 4 4H7ZM9 3V4H15V3H9ZM7 6V17H17V6H7Z"/>
+            </svg>
+            E-SHOP
+          </a>
+          <app-location></app-location>
+
+          <!-- Mobile Toggle Button -->
+          <button 
+            class="navbar-toggler border-0 shadow-none" 
+            type="button" 
+            data-bs-toggle="collapse" 
+            data-bs-target="#navbarContent" 
+            aria-controls="navbarContent" 
+            aria-expanded="false" 
+            aria-label="Toggle navigation menu">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+
+          <!-- Navbar Content -->
+          <div class="collapse navbar-collapse" id="navbarContent">
+            
+            <!-- Search Section -->
+            <div class="flex-grow-1 mx-3 my-2 my-lg-0 ">
+              <form class="search-bar d-flex position-relative" role="search" aria-label="Product search">
+                <!-- Category Dropdown -->
+                <div class="dropdown">
+                  <button 
+                    class="btn btn-outline-secondary dropdown-toggle rounded-end-0 border-end-0" 
+                    type="button" 
+                    id="categoryDropdown" 
+                    data-bs-toggle="dropdown" 
+                    aria-expanded="false"
+                    aria-label="Select category">
+                    All Categories
+                  </button>
+                  <ul class="dropdown-menu" aria-labelledby="categoryDropdown">
+                    <li><a class="dropdown-item" href="#">All Categories</a></li>
+                    <li><a class="dropdown-item" href="#">Electronics</a></li>
+                    <li><a class="dropdown-item" href="#">Fashion</a></li>
+                    <li><a class="dropdown-item" href="#">Home & Garden</a></li>
+                    <li><a class="dropdown-item" href="#">Sports</a></li>
+                  </ul>
+                </div>
+
+                <!-- Search Input -->
+                <input 
+                  class="form-control border-secondary rounded-start-0 rounded-end-0" 
+                  type="search" 
+                  placeholder="Search products..." 
+                  aria-label="Search products"
+                  name="searchTerm"
+                  style="border-left: 1px solid orange; border-right: 1px solid orange;">
+
+                <!-- Search Button -->
+                <button 
+                  class="btn btn-warning rounded-start-0 px-4" 
+                  type="submit" 
+                  aria-label="Submit search">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 50 50">
+                   <path d="M 21 3 C 11.621094 3 4 10.621094 4 20 C 4 29.378906 11.621094 37 21 37 C 24.710938 37 28.140625 35.804688 30.9375 33.78125 L 44.09375 46.90625 L 46.90625 44.09375 L 33.90625 31.0625 C 36.460938 28.085938 38 24.222656 38 20 C 38 10.621094 30.378906 3 21 3 Z M 21 5 C 29.296875 5 36 11.703125 36 20 C 36 28.296875 29.296875 35 21 35 C 12.703125 35 6 28.296875 6 20 C 6 11.703125 12.703125 5 21 5 Z"></path>
+                 </svg>
+                </button>
+              </form>
+            </div>
+
+            <!-- Account & Cart Links -->
+            <ul class="navbar-nav ms-auto d-flex align-items-center">
+              
+              <!-- Account dropdown - changes based on auth status -->
+              <li class="nav-item me-3 dropdown">
+                <a class="nav-link text-light fw-medium position-relative dropdown-toggle" 
+                   id="accountDropdown" 
+                   role="button" 
+                   data-bs-toggle="dropdown"
+                   aria-expanded="false"
+                   aria-label="Account options">
+                  <i class="bi bi-person-circle me-1 fs-5" aria-hidden="true"></i>
+                  <span class="d-none d-lg-inline">{{ authService.isAuthenticated() ? 'My Account' : 'Sign In' }}</span>
+                  <span class="d-lg-none">Account</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountDropdown">
+                  <!-- Show these items when logged out -->
+                  @if (!authService.isAuthenticated()) {
+                    <li><a class="dropdown-item" routerLink="/auth/login">Sign In</a></li>
+                    <li><a class="dropdown-item" routerLink="/auth/register">Register</a></li>
+                  }
+                  <!-- Show these items when logged in -->
+                  @if (authService.isAuthenticated()) {
+                    <li><a class="dropdown-item" href="#">My Profile</a></li>
+                    <li><a class="dropdown-item" href="#">Orders</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" (click)="authService.logout()">Sign Out</a></li>
+                  }
+                </ul>
+              </li>
+
+              <!-- Orders -->
+              <li class="nav-item me-3">
+                <a class="nav-link text-light fw-medium" href="#" aria-label="View your orders">
+                  <i class="bi bi-box-seam me-1 fs-5" aria-hidden="true"></i>
+                  <span class="d-none d-lg-inline">Orders</span>
+                  <span class="d-lg-none">Orders</span>
+                </a>
+              </li>
+
+              <!-- Cart -->
+              <li class="nav-item">
+                <a class="nav-link text-light fw-medium position-relative" href="#" aria-label="Shopping cart">
+                  <i class="bi bi-cart3 fs-4" aria-hidden="true"></i>
+                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" aria-hidden="true">
+                    0
+                  </span>
+                  <span class="ms-1 d-none d-lg-inline">Cart</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Secondary Navigation -->
+      <nav class="bg-secondary py-2 d-none d-lg-block" role="navigation" aria-label="Category navigation">
+        <div class="container-fluid px-3">
+          <ul class="nav justify-content-start">
+            <li class="nav-item">
+              <a class="nav-link text-white fw-medium py-2 px-3" href="#">
+                <i class="bi bi-lightning-charge me-1" aria-hidden="true"></i>Today's Deals
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white fw-medium py-2 px-3" href="#">Electronics</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white fw-medium py-2 px-3" href="#">Fashion</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white fw-medium py-2 px-3" href="#">Home & Garden</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white fw-medium py-2 px-3" href="#">Books</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white fw-medium py-2 px-3" href="#">Sports</a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      <!-- Main Content Area -->
+      <main class="container-fluid px-3 py-4" role="main">
+        <router-outlet></router-outlet>
+      </main>
+    </div>
+  `,
+})
+export class MainLayoutComponent {
+  constructor(public authService: AuthService) {}
+}
