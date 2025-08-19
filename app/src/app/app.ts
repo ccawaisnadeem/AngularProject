@@ -1,6 +1,7 @@
 
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, Router } from '@angular/router';
+import { DebugComponent } from './debug.component';
 
 export interface Product {
   id: number;
@@ -15,7 +16,7 @@ export interface Product {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, DebugComponent],
   templateUrl: './app.html',
   styleUrls: ['./app.scss']
 })

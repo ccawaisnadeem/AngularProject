@@ -1,17 +1,17 @@
-<div class="auth-page">
+<div class="d-flex flex-column align-items-center justify-content-center min-vh-100">
   <!-- Shop Logo -->
   <div class="text-center mb-4">
     <a routerLink="/home">
-      <h1 class="logo">E-SHOP</h1>
+      <h1 class="fw-bold border-bottom border-primary pb-2">E-SHOP</h1>
     </a>
   </div>
 
-  <div class="auth-box">
-    <div class="auth-header">
-      <h2>Authentication</h2>
-      <p *ngIf="loading">Processing your {{ provider }} login...</p>
-      <p *ngIf="!loading && !errorMessage">Authentication successful!</p>
-      <p *ngIf="!loading && errorMessage">Authentication failed</p>
+  <div class="bg-white p-4 rounded shadow-sm" style="width: 350px;">
+    <div class="mb-4 text-center">
+      <h2 class="h4 fw-bold">Authentication</h2>
+      <p class="text-muted small" *ngIf="loading">Processing your {{ provider }} login...</p>
+      <p class="text-muted small" *ngIf="!loading && !errorMessage">Authentication successful!</p>
+      <p class="text-muted small" *ngIf="!loading && errorMessage">Authentication failed</p>
     </div>
 
     <div *ngIf="errorMessage" class="alert alert-danger">
@@ -22,26 +22,21 @@
       You have been successfully authenticated. Redirecting to home page...
     </div>
 
-    <div *ngIf="loading" class="loading-container">
-      <div class="spinner"></div>
-      <p>Please wait while we complete the authentication process...</p>
+    <div *ngIf="loading" class="text-center py-4">
+      <div class="spinner-border text-primary mb-3" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="text-muted small">Please wait while we complete the authentication process...</p>
     </div>
   </div>
   
   <!-- Footer -->
-  <div class="auth-footer mt-4">
-    <div class="container">
-      <div class="divider mb-3"></div>
-      <div class="row text-center">
-        <div class="col-12">
-          <p class="text-muted small mb-2">© 2024 E-Shop. All rights reserved.</p>
-          <p class="text-muted small">
-            <a href="#" class="text-decoration-none text-muted me-3">Privacy Policy</a>
-            <a href="#" class="text-decoration-none text-muted me-3">Terms of Service</a>
-            <a href="#" class="text-decoration-none text-muted">Help</a>
-          </p>
-        </div>
-      </div>
+  <div class="mt-4 text-center">
+    <p class="text-muted small mb-2">© 2024 E-Shop. All rights reserved.</p>
+    <div class="small">
+      <a href="#" class="text-decoration-none text-muted me-3">Privacy Policy</a>
+      <a href="#" class="text-decoration-none text-muted me-3">Terms of Service</a>
+      <a href="#" class="text-decoration-none text-muted">Help</a>
     </div>
   </div>
 </div>

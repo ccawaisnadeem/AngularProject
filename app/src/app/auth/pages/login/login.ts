@@ -50,16 +50,30 @@ export class LoginComponent implements OnInit {
 
     // Stop here if form is invalid
     if (this.loginForm.invalid) {
+      console.log('Login form is invalid:', this.loginForm.errors);
+      
+      // Show validation messages for all invalid fields
+      Object.keys(this.f).forEach(key => {
+        const control = this.f[key];
+        if (control.invalid) {
+          console.log(`Field ${key} is invalid:`, control.errors);
+        }
+      });
+      
       return;
     }
 
+    console.log('Login form is valid, submitting');
+    
     this.loading = true;
     this.authService.loginWithEmail(this.f['email'].value, this.f['password'].value)
       .subscribe({
-        next: () => {
+        next: (user) => {
+          console.log('Login successful, user:', user);
           this.router.navigate([this.returnUrl]);
         },
         error: error => {
+          console.error('Login error in component:', error);
           this.errorMessage = error.message || 'Login failed. Please try again.';
           this.loading = false;
         }
@@ -72,9 +86,5 @@ export class LoginComponent implements OnInit {
 
   loginWithGitHub(): void {
     this.authService.loginWithGitHub();
-  }
-
-  loginWithFacebook(): void {
-    this.authService.loginWithFacebook();
   }
 }

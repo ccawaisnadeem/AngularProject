@@ -51,10 +51,11 @@ import { AuthService } from '../auth/services/auth.service';
                     id="categoryDropdown" 
                     data-bs-toggle="dropdown" 
                     aria-expanded="false"
-                    aria-label="Select category">
-                    All Categories
+                    aria-label="Select category"
+                    style="color: white;">
+                    All
                   </button>
-                  <ul class="dropdown-menu" aria-labelledby="categoryDropdown">
+                  <ul class="dropdown-menu" aria-labelledby="categoryDropdown" style="hover: grey">
                     <li><a class="dropdown-item" href="#">All Categories</a></li>
                     <li><a class="dropdown-item" href="#">Electronics</a></li>
                     <li><a class="dropdown-item" href="#">Fashion</a></li>
@@ -168,7 +169,7 @@ import { AuthService } from '../auth/services/auth.service';
       </nav>
 
       <!-- Main Content Area -->
-      <main class="container-fluid px-3 py-4" role="main">
+      <main class="container-fluid px-3 py-4" role="main" style="background-color: #a4a5a5ff;">
         <router-outlet></router-outlet>
       </main>
     </div>
