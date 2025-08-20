@@ -11,7 +11,7 @@ import { AuthService } from '../auth/services/auth.service';
   imports: [CommonModule, RouterOutlet, RouterLink, FormsModule, LocationComponent],
   template: `
     <!-- home.html - Angular v20 + Bootstrap 5 E-commerce Page -->
-    <div class="ecommerce-page">
+    <div class="ecommerce-page d-flex flex-column min-vh-100">
       <!-- Navbar -->
       <nav class="navbar navbar-expand-lg navbar-light bg-black sticky-top shadow-sm" role="navigation" aria-label="Main navigation">
         <div class="container-fluid px-3">
@@ -110,11 +110,28 @@ import { AuthService } from '../auth/services/auth.service';
                   @if (authService.isAuthenticated()) {
                     <li><a class="dropdown-item" href="#">My Profile</a></li>
                     <li><a class="dropdown-item" href="#">Orders</a></li>
+                    
+                    <!-- Admin Dashboard link (only for admins) -->
+                    @if (authService.isAdmin()) {
+                      <li><a class="dropdown-item text-primary" routerLink="/admin/dashboard"><i class="bi bi-shield-lock me-2"></i>Admin Dashboard</a></li>
+                    }
+                    
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" href="#" (click)="authService.logout()">Sign Out</a></li>
                   }
                 </ul>
               </li>
+
+              <!-- Admin Dashboard Link (only visible to admins) -->
+              @if (authService.isAdmin()) {
+              <li class="nav-item me-3">
+                <a class="nav-link text-light fw-medium" routerLink="/admin/dashboard" aria-label="Admin Dashboard">
+                  <i class="bi bi-shield-lock me-1 fs-5" aria-hidden="true"></i>
+                  <span class="d-none d-lg-inline">Admin Dashboard</span>
+                  <span class="d-lg-none">Admin</span>
+                </a>
+              </li>
+              }
 
               <!-- Orders -->
               <li class="nav-item me-3">
@@ -144,6 +161,15 @@ import { AuthService } from '../auth/services/auth.service';
       <nav class="bg-secondary py-2 d-none d-lg-block" role="navigation" aria-label="Category navigation">
         <div class="container-fluid px-3">
           <ul class="nav justify-content-start">
+            <!-- Admin Dashboard link (only visible to admins) -->
+            @if (authService.isAdmin()) {
+              <li class="nav-item">
+                <a class="nav-link text-warning fw-medium py-2 px-3" routerLink="/admin/dashboard">
+                  <i class="bi bi-shield-lock me-1" aria-hidden="true"></i>Admin Dashboard
+                </a>
+              </li>
+            }
+          
             <li class="nav-item">
               <a class="nav-link text-white fw-medium py-2 px-3" href="#">
                 <i class="bi bi-lightning-charge me-1" aria-hidden="true"></i>Today's Deals
@@ -172,6 +198,38 @@ import { AuthService } from '../auth/services/auth.service';
       <main class="container-fluid px-3 py-4" role="main" style="background-color: #a4a5a5ff;">
         <router-outlet></router-outlet>
       </main>
+      
+      <!-- Footer -->
+      <footer class="bg-dark text-light py-4 mt-auto">
+        <div class="container">
+          <div class="row">
+            <div class="col-md-6">
+              <h5>E-SHOP</h5>
+              <p class="small">Your one-stop shop for all your needs.</p>
+            </div>
+            <div class="col-md-3">
+              <h6>Quick Links</h6>
+              <ul class="list-unstyled small">
+                <li><a href="#" class="text-light text-decoration-none">About Us</a></li>
+                <li><a href="#" class="text-light text-decoration-none">Contact</a></li>
+                <li><a href="#" class="text-light text-decoration-none">FAQs</a></li>
+              </ul>
+            </div>
+            <div class="col-md-3">
+              <h6>Legal</h6>
+              <ul class="list-unstyled small">
+                <li><a href="#" class="text-light text-decoration-none">Terms of Service</a></li>
+                <li><a href="#" class="text-light text-decoration-none">Privacy Policy</a></li>
+                <li><a routerLink="/admin/register" class="text-muted text-decoration-none small">Admin Access</a></li>
+              </ul>
+            </div>
+          </div>
+          <hr class="my-3 bg-secondary">
+          <div class="text-center small">
+            <p class="mb-0">&copy; 2025 E-SHOP. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   `,
 })

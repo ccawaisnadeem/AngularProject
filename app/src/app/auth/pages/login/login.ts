@@ -25,9 +25,13 @@ export class LoginComponent implements OnInit {
     private router: Router,
     private authService: AuthService
   ) {
-    // Redirect to home if already logged in
+    // Redirect if already logged in - admins to admin dashboard, regular users to home
     if (this.authService.isAuthenticated()) {
-      this.router.navigate(['/home']);
+      if (this.authService.isAdmin()) {
+        this.router.navigate(['/admin/dashboard']);
+      } else {
+        this.router.navigate(['/home']);
+      }
     }
 
     this.loginForm = this.formBuilder.group({
@@ -70,7 +74,15 @@ export class LoginComponent implements OnInit {
       .subscribe({
         next: (user) => {
           console.log('Login successful, user:', user);
-          this.router.navigate([this.returnUrl]);
+          
+          // Check if the user is an admin and redirect accordingly
+          if (this.authService.isAdmin()) {
+            console.log('User is admin, redirecting to admin dashboard');
+            this.router.navigate(['/admin/dashboard']);
+          } else {
+            console.log('User is regular user, navigating to:', this.returnUrl);
+            this.router.navigate([this.returnUrl]);
+          }
         },
         error: error => {
           console.error('Login error in component:', error);

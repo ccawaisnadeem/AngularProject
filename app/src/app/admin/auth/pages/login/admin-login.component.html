@@ -1,0 +1,99 @@
+<div class="d-flex flex-column align-items-center justify-content-center vh-100 bg-light">
+  <div class="text-center mb-4">
+    <h1 class="h3 fw-bold">Admin Dashboard Login</h1>
+  </div>
+  
+  <div class="card shadow-sm admin-login-container">
+    <div class="card-body p-4">
+      <!-- Success Alert -->
+      @if (successMessage) {
+        <div class="alert alert-success" role="alert">
+          {{ successMessage }}
+        </div>
+      }
+      
+      <!-- Error Alert -->
+      @if (errorMessage) {
+        <div class="alert alert-danger" role="alert">
+          {{ errorMessage }}
+        </div>
+      }
+      
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <!-- Email -->
+        <div class="form-group mb-3">
+          <label for="email" class="form-label">Email Address</label>
+          <input 
+            type="email" 
+            formControlName="email" 
+            class="form-control" 
+            [ngClass]="{ 'is-invalid': submitted && f['email'].errors }" 
+            id="email" 
+            placeholder="admin@example.com"
+          />
+          @if (submitted && f['email'].errors) {
+            <div class="invalid-feedback">
+              @if (f['email'].errors['required']) {
+                Email is required
+              }
+              @if (f['email'].errors['email']) {
+                Please enter a valid email address
+              }
+            </div>
+          }
+        </div>
+        
+        <!-- Password -->
+        <div class="form-group mb-3">
+          <label for="password" class="form-label">Password</label>
+          <div class="input-group">
+            <input 
+              [type]="showPassword ? 'text' : 'password'" 
+              formControlName="password" 
+              class="form-control" 
+              [ngClass]="{ 'is-invalid': submitted && f['password'].errors }" 
+              id="password"
+            />
+            <button 
+              class="btn btn-outline-secondary" 
+              type="button" 
+              (click)="togglePasswordVisibility()"
+            >
+              <i [class]="showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+            </button>
+            @if (submitted && f['password'].errors) {
+              <div class="invalid-feedback">
+                @if (f['password'].errors['required']) {
+                  Password is required
+                }
+                @if (f['password'].errors['minlength']) {
+                  Password must be at least 6 characters
+                }
+              </div>
+            }
+          </div>
+        </div>
+        
+        <!-- Submit Button -->
+        <div class="d-grid gap-2 mt-4">
+          <button 
+            class="btn btn-primary" 
+            type="submit" 
+            [disabled]="loading"
+          >
+            <span *ngIf="loading" class="spinner-border spinner-border-sm me-1"></span>
+            Sign In as Admin
+          </button>
+        </div>
+        
+        <div class="mt-3 text-center">
+          <a routerLink="/admin/auth/register" class="text-decoration-none">Register as Admin</a>
+        </div>
+        
+        <div class="mt-3 text-center">
+          <a routerLink="/auth/login" class="text-decoration-none">Regular User Login</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

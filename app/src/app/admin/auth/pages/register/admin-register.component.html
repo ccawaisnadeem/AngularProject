@@ -1,0 +1,141 @@
+<div class="d-flex flex-column align-items-center justify-content-center min-vh-100 bg-light py-5">
+  <div class="text-center mb-4">
+    <h1 class="h3 fw-bold">Admin Dashboard Registration</h1>
+  </div>
+  
+  <div class="card shadow-sm admin-register-container">
+    <div class="card-body p-4">
+      <!-- Error Alert -->
+      @if (errorMessage) {
+        <div class="alert alert-danger" role="alert">
+          {{ errorMessage }}
+        </div>
+      }
+      
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+        <!-- Full Name -->
+        <div class="form-group mb-3">
+          <label for="name" class="form-label">Full Name</label>
+          <input 
+            type="text" 
+            formControlName="name" 
+            class="form-control" 
+            [ngClass]="{ 'is-invalid': submitted && f['name'].errors }" 
+            id="name" 
+            placeholder="John Doe"
+          />
+          @if (submitted && f['name'].errors) {
+            <div class="invalid-feedback">
+              Full name is required
+            </div>
+          }
+        </div>
+        
+        <!-- Email -->
+        <div class="form-group mb-3">
+          <label for="email" class="form-label">Email Address</label>
+          <input 
+            type="email" 
+            formControlName="email" 
+            class="form-control" 
+            [ngClass]="{ 'is-invalid': submitted && f['email'].errors }" 
+            id="email" 
+            placeholder="admin@example.com"
+          />
+          @if (submitted && f['email'].errors) {
+            <div class="invalid-feedback">
+              @if (f['email'].errors['required']) {
+                Email is required
+              }
+              @if (f['email'].errors['email']) {
+                Please enter a valid email address
+              }
+            </div>
+          }
+        </div>
+        
+        <!-- Password -->
+        <div class="form-group mb-3">
+          <label for="password" class="form-label">Password</label>
+          <div class="input-group">
+            <input 
+              [type]="showPassword ? 'text' : 'password'" 
+              formControlName="password" 
+              class="form-control" 
+              [ngClass]="{ 'is-invalid': submitted && f['password'].errors }" 
+              id="password"
+            />
+            <button 
+              class="btn btn-outline-secondary" 
+              type="button" 
+              (click)="togglePasswordVisibility('password')"
+            >
+              <i [class]="showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+            </button>
+            @if (submitted && f['password'].errors) {
+              <div class="invalid-feedback">
+                @if (f['password'].errors['required']) {
+                  Password is required
+                }
+                @if (f['password'].errors['minlength']) {
+                  Password must be at least 6 characters
+                }
+              </div>
+            }
+          </div>
+        </div>
+        
+        <!-- Confirm Password -->
+        <div class="form-group mb-3">
+          <label for="confirmPassword" class="form-label">Confirm Password</label>
+          <div class="input-group">
+            <input 
+              [type]="showConfirmPassword ? 'text' : 'password'" 
+              formControlName="confirmPassword" 
+              class="form-control" 
+              [ngClass]="{ 'is-invalid': submitted && (f['confirmPassword'].errors || registerForm.hasError('mismatch')) }" 
+              id="confirmPassword"
+            />
+            <button 
+              class="btn btn-outline-secondary" 
+              type="button" 
+              (click)="togglePasswordVisibility('confirmPassword')"
+            >
+              <i [class]="showConfirmPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+            </button>
+            @if (submitted && (f['confirmPassword'].errors || registerForm.hasError('mismatch'))) {
+              <div class="invalid-feedback">
+                @if (f['confirmPassword'].errors?.['required']) {
+                  Confirm password is required
+                }
+                @if (registerForm.hasError('mismatch')) {
+                  Passwords do not match
+                }
+              </div>
+            }
+          </div>
+        </div>
+        
+        <!-- Submit Button -->
+        <div class="d-grid gap-2 mt-4">
+          <button 
+            class="btn btn-primary" 
+            type="submit" 
+            [disabled]="loading"
+          >
+            <span *ngIf="loading" class="spinner-border spinner-border-sm me-1"></span>
+            Register as Admin
+          </button>
+        </div>
+        
+        <div class="mt-3 text-center">
+          <a routerLink="/admin/auth/login" class="text-decoration-none">Already have an admin account? Login</a>
+        </div>
+        
+        <div class="mt-2 text-center">
+          <a routerLink="/auth/register" class="text-decoration-none">Register as a regular user</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

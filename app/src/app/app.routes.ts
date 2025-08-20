@@ -3,6 +3,7 @@ import { Home } from './pages/home/home';
 import { Inventory } from './pages/inventory/inventory';
 import { AuthGuard } from './auth/guards/auth.guard';
 import { MainLayoutComponent } from './layouts/main-layout.component';
+import { AdminGuard } from './admin/guards/admin.guard';
 
 export const routes: Routes = [
     { path: '', redirectTo: '/home', pathMatch: 'full' },
@@ -42,6 +43,25 @@ export const routes: Routes = [
     // Direct access shortcuts
     { path: 'login', redirectTo: '/auth/login', pathMatch: 'full' },
     { path: 'register', redirectTo: '/auth/register', pathMatch: 'full' },
+    
+    // Direct admin auth routes (no guards)
+    { 
+        path: 'admin/login', 
+        loadComponent: () => import('./admin/auth/pages/login/admin-login.component').then(m => m.AdminLoginComponent) 
+    },
+    { 
+        path: 'admin/register', 
+        loadComponent: () => import('./admin/auth/pages/register/admin-register.component').then(m => m.AdminRegisterComponent) 
+    },
+    
+    // Direct access to admin setup (bypass all guards)
+   
+    
+    // Admin routes - lazy loaded
+    {
+        path: 'admin',
+        loadChildren: () => import('./admin/admin.routes').then(m => m.ADMIN_ROUTES)
+    },
     
     // Fallback route
     { path: '**', redirectTo: '/home' }

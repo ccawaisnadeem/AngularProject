@@ -7,7 +7,7 @@ export interface User {
   photoURL?: string;
   createdAt?: Date;
   updatedAt?: Date;
-  role?: string;
+  role?: 'Admin' | 'Customer'; // Only backend values: Admin or Customer
 }
 
 export interface AuthResponse {

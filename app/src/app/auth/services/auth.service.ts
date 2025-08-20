@@ -47,8 +47,13 @@ export class AuthService {
   public isAuthenticated(): boolean {
     return !!this.getToken() && !!this.currentUserValue;
   }
+  
+  public isAdmin(): boolean {
+    return this.isAuthenticated() && 
+           this.currentUserValue?.role === 'Admin';
+  }
 
-  // Manual login with email and password
+  // Manual login with email and password - works for both regular users and admins
   loginWithEmail(email: string, password: string): Observable<User> {
     console.log(`Logging in user with email: ${email}`);
     
@@ -56,6 +61,7 @@ export class AuthService {
       .pipe(
         tap(response => {
           console.log('Login successful:', response);
+          // Store user info and token regardless of user role
           this.handleAuthResponse(response);
         }),
         map(response => response.user),
@@ -67,6 +73,9 @@ export class AuthService {
             }
             if (error.status === 401) {
               return throwError(() => new Error('Invalid email or password. Please try again.'));
+            }
+            if (error.status === 403) {
+              return throwError(() => new Error('You do not have permission to access this resource.'));
             }
             if (error.status === 400 && error.error?.errors) {
               const validationErrors = Object.values(error.error.errors).flat().join(', ');
@@ -80,13 +89,20 @@ export class AuthService {
   }
 
   // Register with email and password
-  registerWithEmail(email: string, password: string, name: string, address?: string): Observable<User> {
-    const payload = { 
+  registerWithEmail(email: string, password: string, name: string, address?: string, role: 'admin' | 'user' | 'Customer' | 'Admin' = 'Customer', adminCode?: string): Observable<User> {
+    // Create the payload for user registration - backend expects FullName field
+    const payload: any = { 
       email, 
       password, 
-      fullName: name, // Changed from 'name' to 'fullName' to match backend expectations
-      address 
+      FullName: name, // Backend expects FullName, not name
+      address,
+      Role: (role === 'admin' || role === 'Admin') ? 'Admin' : 'Customer' // Backend expects Role with capital R and proper case
     };
+    
+    // Only include adminCode if it's provided
+    if (adminCode) {
+      payload.adminCode = adminCode;
+    }
     
     console.log(`Registering user with payload:`, payload);
     
@@ -95,7 +111,10 @@ export class AuthService {
       .pipe(
         tap(response => {
           console.log('Registration successful:', response);
-          this.handleAuthResponse(response);
+          // Don't automatically log in admin users after registration
+          if (role !== 'admin' && role !== 'Admin') {
+            this.handleAuthResponse(response);
+          }
         }),
         map(response => response.user),
         catchError(error => {
@@ -221,9 +240,20 @@ export class AuthService {
     this.currentUserSubject.next(null);
     this.router.navigate(['/home']);
   }
+  
+  // Update current user data
+  updateCurrentUser(userData: User): void {
+    // Update the subject
+    this.currentUserSubject.next(userData);
+    
+    // Update localStorage
+    localStorage.setItem(this.USER_STORAGE_KEY, JSON.stringify(userData));
+    
+    console.log('User data updated:', userData);
+  }
 
   // Handle authentication response
-  private handleAuthResponse(response: AuthResponse): void {
+  public handleAuthResponse(response: AuthResponse): void {
     if (response?.token && response?.user) {
       console.log('Storing auth data in localStorage');
       
