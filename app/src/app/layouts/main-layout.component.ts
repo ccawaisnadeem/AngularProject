@@ -1,3 +1,4 @@
+
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink } from '@angular/router';
@@ -112,9 +113,14 @@ import { AuthService } from '../auth/services/auth.service';
                     <li><a class="dropdown-item" href="#">Orders</a></li>
                     
                     <!-- Admin Dashboard link (only for admins) -->
-                    @if (authService.isAdmin()) {
-                      <li><a class="dropdown-item text-primary" routerLink="/admin/dashboard"><i class="bi bi-shield-lock me-2"></i>Admin Dashboard</a></li>
-                    }
+                   <!-- Exit Store Link (only visible to admins) -->
+                  @if (authService.isAdmin()) {
+                      <li class="dropdown-item">
+                       <a class="nav-link text-BLACK fw-medium py-2 px-3" routerLink="/admin/dashboard" aria-label="Return to admin dashboard">
+                            <i class="bi bi-speedometer2 me-1" aria-hidden="true"></i>Exit Store
+                       </a>
+                     </li>
+            }
                     
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" href="#" (click)="authService.logout()">Sign Out</a></li>
@@ -124,13 +130,12 @@ import { AuthService } from '../auth/services/auth.service';
 
               <!-- Admin Dashboard Link (only visible to admins) -->
               @if (authService.isAdmin()) {
-              <li class="nav-item me-3">
-                <a class="nav-link text-light fw-medium" routerLink="/admin/dashboard" aria-label="Admin Dashboard">
-                  <i class="bi bi-shield-lock me-1 fs-5" aria-hidden="true"></i>
-                  <span class="d-none d-lg-inline">Admin Dashboard</span>
-                  <span class="d-lg-none">Admin</span>
-                </a>
-              </li>
+                <li class="nav-item me-3">
+                  <a class="nav-link text-light fw-medium" routerLink="/admin/dashboard" aria-label="View admin dashboard">
+                    <i class="bi bi-speedometer2 me-1 fs-5" aria-hidden="true"></i>
+                    <span class="d-none d-lg-inline">Admin Dashboard</span>
+                  </a>
+                </li>
               }
 
               <!-- Orders -->
@@ -161,15 +166,12 @@ import { AuthService } from '../auth/services/auth.service';
       <nav class="bg-secondary py-2 d-none d-lg-block" role="navigation" aria-label="Category navigation">
         <div class="container-fluid px-3">
           <ul class="nav justify-content-start">
-            <!-- Admin Dashboard link (only visible to admins) -->
-            @if (authService.isAdmin()) {
-              <li class="nav-item">
-                <a class="nav-link text-warning fw-medium py-2 px-3" routerLink="/admin/dashboard">
-                  <i class="bi bi-shield-lock me-1" aria-hidden="true"></i>Admin Dashboard
-                </a>
-              </li>
-            }
-          
+            <li class="nav-item">
+              <a class="nav-link text-white fw-medium py-2 px-3" href="#">
+                <i class="bi bi-house-door me-1" aria-hidden="true"></i>Home
+              </a>
+            </li>
+            
             <li class="nav-item">
               <a class="nav-link text-white fw-medium py-2 px-3" href="#">
                 <i class="bi bi-lightning-charge me-1" aria-hidden="true"></i>Today's Deals

@@ -15,6 +15,7 @@ export const routes: Routes = [
         children: [
             { path: 'home', component: Home },
             { path: 'inventory', component: Inventory, canActivate: [AuthGuard] },
+            { path: '', redirectTo: 'home', pathMatch: 'full' }, // This ensures the layout shows even with empty path
         ]
     },
     

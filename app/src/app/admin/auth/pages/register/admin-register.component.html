@@ -19,7 +19,7 @@
           <input 
             type="text" 
             formControlName="name" 
-            class="form-control" 
+            class="form" 
             [ngClass]="{ 'is-invalid': submitted && f['name'].errors }" 
             id="name" 
             placeholder="John Doe"
@@ -37,7 +37,7 @@
           <input 
             type="email" 
             formControlName="email" 
-            class="form-control" 
+            class="form" 
             [ngClass]="{ 'is-invalid': submitted && f['email'].errors }" 
             id="email" 
             placeholder="admin@example.com"
@@ -61,17 +61,11 @@
             <input 
               [type]="showPassword ? 'text' : 'password'" 
               formControlName="password" 
-              class="form-control" 
+              class="form" 
               [ngClass]="{ 'is-invalid': submitted && f['password'].errors }" 
               id="password"
             />
-            <button 
-              class="btn btn-outline-secondary" 
-              type="button" 
-              (click)="togglePasswordVisibility('password')"
-            >
-              <i [class]="showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
-            </button>
+            
             @if (submitted && f['password'].errors) {
               <div class="invalid-feedback">
                 @if (f['password'].errors['required']) {
@@ -92,17 +86,11 @@
             <input 
               [type]="showConfirmPassword ? 'text' : 'password'" 
               formControlName="confirmPassword" 
-              class="form-control" 
+              class="form" 
               [ngClass]="{ 'is-invalid': submitted && (f['confirmPassword'].errors || registerForm.hasError('mismatch')) }" 
               id="confirmPassword"
             />
-            <button 
-              class="btn btn-outline-secondary" 
-              type="button" 
-              (click)="togglePasswordVisibility('confirmPassword')"
-            >
-              <i [class]="showConfirmPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
-            </button>
+            
             @if (submitted && (f['confirmPassword'].errors || registerForm.hasError('mismatch'))) {
               <div class="invalid-feedback">
                 @if (f['confirmPassword'].errors?.['required']) {
@@ -119,7 +107,7 @@
         <!-- Submit Button -->
         <div class="d-grid gap-2 mt-4">
           <button 
-            class="btn btn-primary" 
+            class="btn" 
             type="submit" 
             [disabled]="loading"
           >
@@ -129,13 +117,74 @@
         </div>
         
         <div class="mt-3 text-center">
-          <a routerLink="/admin/auth/login" class="text-decoration-none">Already have an admin account? Login</a>
-        </div>
-        
-        <div class="mt-2 text-center">
-          <a routerLink="/auth/register" class="text-decoration-none">Register as a regular user</a>
+        <P>Already have an admin account?</P>
+          <a routerLink="/admin/auth/login" class="text-decoration-none" style="color:#ffc107"> Login</a>
         </div>
       </form>
     </div>
   </div>
+  <div class="mt-4 text-center">
+      <p class="text-muted small mb-2">© 2025 E-Shop. All rights reserved.</p>
+      <div class="small">
+        <a href="#" class="text-decoration-none text-muted me-3">Privacy Policy</a>
+        <a href="#" class="text-decoration-none text-muted me-3">Terms of Service</a>
+        <a href="#" class="text-decoration-none text-muted">Help</a>
+      </div>
+    </div>
 </div>
+<style>
+  .admin-register-container {
+  width: 100%;
+  max-width: 420px;
+  min-height: 560px; /* enough height to fit errors */
+}
+  .btn{
+  background: linear-gradient(to bottom, #f7dfa5, #f0c14b);
+  border-color: #a88734 #9c7e31 #846a29;
+  color: #111;
+  width: 100%;
+  
+  &:hover {
+    background: linear-gradient(to bottom, #f5d78e, #eeb933);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+.form{
+  width: 100%;
+  height: 40px;
+  padding: 3px 7px;
+  border: 1px solid #a6a6a6;
+  border-radius: 3px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5), 0 1px 0 rgba(0, 0, 0, 0.07) inset;
+  font-size: 14px;
+  
+  &:focus {
+    outline: none;
+    border-color: #e77600;
+    box-shadow: 0 0 3px 2px rgba(228, 121, 17, 0.5);
+  }
+  
+  &.is-invalid {
+    border-color: #dc3545;
+  }
+}
+.form-group {
+  position: relative;
+}
+
+.invalid-feedback {
+  display: block;       /* keep it below input */
+  min-height: 18px;     /* reserve space for 1 line */
+  margin-top: 4px;      /* breathing room below input */
+  font-size: 13px;      
+  color: #dc3545;
+  line-height: 1.2;
+}
+.form-group {
+  margin-bottom: 1.75rem; /* ensure spacing between groups */
+}
+</style>

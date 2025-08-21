@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { catchError, delay, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+import { User } from '../../auth/models/user.model';
 
 @Injectable({
   providedIn: 'root'
@@ -58,5 +59,89 @@ export class AdminService {
       page,
       limit
     }).pipe(delay(500)); // Simulate API delay
+  }
+  
+  // User Management Methods
+  getUsers(): Observable<User[]> {
+    console.log('Fetching users from:', `${this.API_URL}/User`);
+    return this.http.get<User[]>(`${this.API_URL}/User`)
+      .pipe(
+        map(response => {
+          console.log('API response:', response);
+          // Process each user to ensure correct mapping
+          const processedUsers = Array.isArray(response) ? response.map(user => {
+            // Make sure the user object has consistent properties
+            const processedUser: User = {
+              ...user,
+              // If name is missing but fullName exists, copy it
+              name: user.name || user.fullName
+            };
+            console.log('Processed user:', processedUser);
+            return processedUser;
+          }) : [];
+          return processedUsers;
+        }),
+        catchError(error => {
+          console.error('Error fetching users:', error);
+          return of([]); // Return empty array in case of error
+        })
+      );
+  }
+  
+  getUser(id: string): Observable<User> {
+    return this.http.get<User>(`${this.API_URL}/User/${id}`)
+      .pipe(
+        catchError(error => {
+          console.error(`Error fetching user ${id}:`, error);
+          throw error;
+        })
+      );
+  }
+  
+  updateUser(id: string, userData: Partial<User>): Observable<User> {
+    return this.http.put<User>(`${this.API_URL}/User/${id}`, userData)
+      .pipe(
+        catchError(error => {
+          console.error(`Error updating user ${id}:`, error);
+          throw error;
+        })
+      );
+  }
+  
+  deleteUser(id: string): Observable<any> {
+    return this.http.delete<any>(`${this.API_URL}/User/${id}`)
+      .pipe(
+        catchError(error => {
+          console.error(`Error deleting user ${id}:`, error);
+          throw error;
+        })
+      );
+  }
+  
+  // Get admin users only
+  getAdminUsers(): Observable<User[]> {
+    return this.getUsers().pipe(
+      map(users => users.filter(user => user.role === 'Admin'))
+    );
+  }
+  
+  getUserProfile(): Observable<User> {
+    return this.http.get<User>(`${this.API_URL}/User/profile`)
+      .pipe(
+        catchError(error => {
+          console.error('Error fetching user profile:', error);
+          throw error;
+        })
+      );
+  }
+  
+  updateUserProfile(userData: Partial<User>): Observable<User> {
+    return this.http.put<User>(`${this.API_URL}/User/profile`, userData)
+      .pipe(
+        catchError(error => {
+          console.error('Error updating user profile:', error);
+          throw error;
+        })
+      );
   }
 }

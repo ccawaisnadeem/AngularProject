@@ -1,12 +1,13 @@
 export interface User {
   id: string;
-  name: string;
+  name?: string;
+  fullName?: string; // Added to support the backend response structure
   email: string;
   address?: string;
-  provider: 'google' | 'github' | 'manual';
+  provider?: 'google' | 'github' | 'manual';
   photoURL?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdAt?: Date | string; // Support both Date object and string date format
+  updatedAt?: Date | string;
   role?: 'Admin' | 'Customer'; // Only backend values: Admin or Customer
 }
 

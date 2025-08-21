@@ -1,10 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { StatCardComponent } from '../../components/stat-card/stat-card.component';
 import { AdminService } from '../../services/admin.service';
 import { AdminInvitationService } from '../../services/admin-invitation.service';
+import { ProductService } from '../../../services/product';
 
 @Component({
   selector: 'app-dashboard',
@@ -18,7 +19,7 @@ import { AdminInvitationService } from '../../services/admin-invitation.service'
         <div class="col-md-3">
           <app-stat-card 
             title="Total Products" 
-            value="120" 
+            [value]="productCount.toString()" 
             icon="box-seam" 
             color="primary"
             [link]="'/admin/inventory'"
@@ -27,7 +28,7 @@ import { AdminInvitationService } from '../../services/admin-invitation.service'
         <div class="col-md-3">
           <app-stat-card 
             title="Total Orders" 
-            value="48" 
+            [value]="orderCount.toString()" 
             icon="cart-check" 
             color="success"
             [link]="'/admin/orders'"
@@ -36,10 +37,10 @@ import { AdminInvitationService } from '../../services/admin-invitation.service'
         <div class="col-md-3">
           <app-stat-card 
             title="Users" 
-            value="250" 
+            [value]="userCount.toString()" 
             icon="people" 
             color="info"
-            [link]="'#'"
+            [link]="'/admin/users'"
           ></app-stat-card>
         </div>
         <div class="col-md-3">
@@ -58,11 +59,14 @@ import { AdminInvitationService } from '../../services/admin-invitation.service'
         <div class="card-header d-flex justify-content-between align-items-center">
           <h5 class="mb-0">Admin User Management</h5>
           <button 
-            class="btn btn-sm btn-outline-primary" 
-            (click)="showInvitation = !showInvitation"
-          >
-            <i class="bi bi-plus-circle me-1"></i> Invite New Admin
-          </button>
+             class="btn btn-sm text-black btn-outline-warning"
+             [ngStyle]="{ color: isHovered ? 'white' : 'black' }"
+             (mouseenter)="isHovered = true"
+             (mouseleave)="isHovered = false"
+             (click)="showInvitation = !showInvitation"
+             >
+              <i class="bi bi-plus-circle me-1"></i> Invite New Admin
+         </button>
         </div>
         <div class="card-body">
           <!-- Invite Admin Form -->
@@ -84,7 +88,7 @@ import { AdminInvitationService } from '../../services/admin-invitation.service'
               </div>
               <div class="col">
                 <button 
-                  class="btn btn-primary" 
+                  class="btn btn-warning" 
                   (click)="generateInvitationLink()" 
                   [disabled]="isGeneratingLink"
                 >
@@ -119,26 +123,28 @@ import { AdminInvitationService } from '../../services/admin-invitation.service'
             </div>
           </div>
 
-          <!-- Admin Users List Placeholder -->
+          <!-- Admin Users List -->
           <div>
             <h6>Current Admin Users</h6>
             <p class="text-muted">You can view and manage admin users here.</p>
-            <!-- This would be replaced with an actual admin users table in a real app -->
             <div class="list-group">
-              <div class="list-group-item d-flex justify-content-between align-items-center">
+              <div *ngIf="adminUsers.length === 0" class="text-center py-3">
+                <div class="spinner-border text-primary" role="status" *ngIf="!adminUsers">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+                <p *ngIf="adminUsers.length === 0" class="mb-0 text-muted">No admin users found</p>
+              </div>
+              <div *ngFor="let admin of adminUsers" class="list-group-item d-flex justify-content-between align-items-center">
                 <div>
-                  <strong>Super Admin</strong>
-                  <div class="small text-muted">admin@example.com</div>
+                  <strong>{{ admin.fullName || admin.name || 'Admin User' }}</strong>
+                  <div class="small text-muted">{{ admin.email }}</div>
                 </div>
                 <span class="badge bg-success rounded-pill">Active</span>
               </div>
-              <div class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                  <strong>John Smith</strong>
-                  <div class="small text-muted">john@example.com</div>
-                </div>
-                <span class="badge bg-success rounded-pill">Active</span>
-              </div>
+            </div>
+            <div class="mt-3 text-end">
+              <a routerLink="/admin/users" class="btn btn-sm btn-outline-warning text-black">Manage All Users</a>
+
             </div>
           </div>
         </div>
@@ -149,7 +155,7 @@ import { AdminInvitationService } from '../../services/admin-invitation.service'
           <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
               <h5 class="mb-0">Recent Orders</h5>
-              <a routerLink="/admin/orders" class="btn btn-sm btn-primary">View All</a>
+              <a routerLink="/admin/orders" class="btn btn-sm btn-outline-warning text-black">View All</a>
             </div>
             <div class="card-body">
               <table class="table table-hover">
@@ -223,16 +229,55 @@ import { AdminInvitationService } from '../../services/admin-invitation.service'
                 </div>
               </div>
               <div class="mt-3">
-                <a routerLink="/admin/inventory" class="btn btn-sm btn-primary">Manage Inventory</a>
+                <a routerLink="/admin/inventory" class="btn btn-sm btn-outline-warning text-black">Manage Inventory</a>
               </div>
             </div>
           </div>
         </div>
       </div>
+       <footer class="bg-dark text-light py-4 mt-auto">
+        <div class="container">
+          <div class="row">
+            <div class="col-md-6">
+              <h5>E-SHOP</h5>
+              <p class="small">Your one-stop shop for all your needs.</p>
+            </div>
+            <div class="col-md-3">
+              <h6>Quick Links</h6>
+              <ul class="list-unstyled small">
+                <li><a href="#" class="text-light text-decoration-none">About Us</a></li>
+                <li><a href="#" class="text-light text-decoration-none">Contact</a></li>
+                <li><a href="#" class="text-light text-decoration-none">FAQs</a></li>
+              </ul>
+            </div>
+            <div class="col-md-3">
+              <h6>Legal</h6>
+              <ul class="list-unstyled small">
+                <li><a href="#" class="text-light text-decoration-none">Terms of Service</a></li>
+                <li><a href="#" class="text-light text-decoration-none">Privacy Policy</a></li>
+                <li><a routerLink="/admin/register" class="text-muted text-decoration-none small">Admin Access</a></li>
+              </ul>
+            </div>
+          </div>
+          <hr class="my-3 bg-secondary">
+          <div class="text-center small">
+            <p class="mb-0">&copy; 2025 E-SHOP. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   `
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
+  // Dashboard stats
+  productCount: number = 0;
+  userCount: number = 0;
+  orderCount: number = 48;
+  revenue: number = 5230;
+  
+  // Admin users list
+  adminUsers: any[] = [];
+  
   // Admin invitation properties
   adminEmail: string = '';
   invitationLink: string = '';
@@ -240,8 +285,52 @@ export class DashboardComponent {
   isGeneratingLink: boolean = false;
   invitationError: string = '';
   showInvitation: boolean = false;
+  isHovered = false;
 
-  constructor(private adminInvitationService: AdminInvitationService) {}
+  constructor(
+    private adminInvitationService: AdminInvitationService,
+    private adminService: AdminService,
+    private productService: ProductService
+  ) {}
+  
+  ngOnInit(): void {
+    this.loadDashboardData();
+  }
+  
+  loadDashboardData(): void {
+    // Get product count
+    this.productService.getProducts().subscribe({
+      next: (products) => {
+        this.productCount = products.length;
+        console.log('Product count:', this.productCount);
+      },
+      error: (err) => {
+        console.error('Error fetching products:', err);
+      }
+    });
+    
+    // Get user count
+    this.adminService.getUsers().subscribe({
+      next: (users) => {
+        this.userCount = users.length;
+        console.log('User count:', this.userCount);
+      },
+      error: (err) => {
+        console.error('Error fetching users:', err);
+      }
+    });
+    
+    // Get admin users
+    this.adminService.getAdminUsers().subscribe({
+      next: (admins) => {
+        this.adminUsers = admins;
+        console.log('Admin users:', this.adminUsers);
+      },
+      error: (err) => {
+        console.error('Error fetching admin users:', err);
+      }
+    });
+  }
   
   /**
    * Generates an admin invitation link
