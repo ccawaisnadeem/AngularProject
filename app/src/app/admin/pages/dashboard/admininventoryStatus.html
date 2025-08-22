@@ -1,0 +1,51 @@
+<div>
+  <div class="card mb-4">
+     <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Inventory Status</h5>
+            <a routerLink="/admin/inventory" class="btn btn-sm btn-outline-warning text-black">Manage Inventory</a>
+          </div>
+    <div class="card-body">
+
+      <!-- In Stock -->
+      <div class="mb-3">
+        <div class="d-flex justify-content-between mb-1">
+          <span>In Stock</span>
+          <span>{{ inStockPercent }}%</span>
+        </div>
+        <div class="progress">
+          <div class="progress-bar bg-success" role="progressbar"
+               [style.width.%]="inStockPercent">
+          </div>
+        </div>
+      </div>
+
+      <!-- Low Stock -->
+      <div class="mb-3">
+        <div class="d-flex justify-content-between mb-1">
+          <span>Low Stock</span>
+          <span>{{ lowStockPercent }}%</span>
+        </div>
+        <div class="progress">
+          <div class="progress-bar bg-warning" role="progressbar"
+               [style.width.%]="lowStockPercent">
+          </div>
+        </div>
+      </div>
+
+      <!-- Out of Stock -->
+      <div>
+        <div class="d-flex justify-content-between mb-1">
+          <span>Out of Stock</span>
+          <span>{{ outOfStockPercent }}%</span>
+        </div>
+        <div class="progress">
+          <div class="progress-bar bg-danger" role="progressbar"
+               [style.width.%]="outOfStockPercent">
+          </div>
+        </div>
+      </div>
+
+     
+    </div>
+  </div>
+</div>

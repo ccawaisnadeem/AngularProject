@@ -4,7 +4,7 @@ import { Observable, of } from 'rxjs';
 import { catchError, delay, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { User } from '../../auth/models/user.model';
-
+import { OrderService } from '../../services/order';
 @Injectable({
   providedIn: 'root'
 })
@@ -44,22 +44,36 @@ export class AdminService {
   }
   
   // Get orders for order management
-  getOrders(page: number = 1, limit: number = 10): Observable<any> {
-    // In a real app, this would be an API call
-    // For now, return mock data
-    return of({
-      orders: Array(limit).fill(0).map((_, i) => ({
-        id: `ORD-${String(i + 1 + (page - 1) * limit).padStart(3, '0')}`,
-        customer: ['John Doe', 'Jane Smith', 'Bob Johnson', 'Alice Williams'][Math.floor(Math.random() * 4)],
-        date: new Date(Date.now() - Math.floor(Math.random() * 30) * 86400000).toISOString().split('T')[0],
-        status: ['Processing', 'Shipped', 'Delivered', 'Cancelled'][Math.floor(Math.random() * 4)],
-        amount: Math.floor(Math.random() * 200) + 50
-      })),
-      total: 48,
-      page,
-      limit
-    }).pipe(delay(500)); // Simulate API delay
+  getOrders(): Observable<any[]> {
+  return this.http.get<any[]>(`${this.API_URL}/Order`)
+    .pipe(
+      catchError(error => {
+        console.error('Error fetching orders:', error);
+        return of([]);
+      })
+    );
+ }
+
+  getOrderById(id: number): Observable<any> {
+   return this.http.get<any>(`${this.API_URL}/Order/${id}`)
+    .pipe(
+      catchError(error => {
+        console.error(`Error fetching order ${id}:`, error);
+        throw error;
+      })
+    );
   }
+
+ updateOrderStatus(id: number, status: string): Observable<any> {
+   return this.http.put<any>(`${this.API_URL}/Order/${id}/status`, { status })
+    .pipe(
+      catchError(error => {
+        console.error(`Error updating order ${id} status:`, error);
+        throw error;
+      })
+    );
+ }
+
   
   // User Management Methods
   getUsers(): Observable<User[]> {
@@ -144,4 +158,37 @@ export class AdminService {
         })
       );
   }
+  // Shipment Services 
+    createShipment(orderId: number, shipmentData: any): Observable<any> {
+      return this.http.post<any>(`${this.API_URL}/Shipment`, {
+         orderId,
+         ...shipmentData
+      }).pipe(
+         catchError(error => {
+         console.error(`Error creating shipment for order ${orderId}:`, error);
+         throw error;
+      })
+     );
+   }
+
+  updateShipmentStatus(shipmentId: number, status: string): Observable<any> {
+   return this.http.put<any>(`${this.API_URL}/Shipment/${shipmentId}/status`, { status })
+    .pipe(
+      catchError(error => {
+        console.error(`Error updating shipment ${shipmentId} status:`, error);
+        throw error;
+      })
+    );
+ }
+
+  getShipmentByOrder(orderId: number): Observable<any> {
+    return this.http.get<any>(`${this.API_URL}/Shipment/order/${orderId}`)
+    .pipe(
+      catchError(error => {
+        console.error(`Error fetching shipment for order ${orderId}:`, error);
+        throw error;
+      })
+    );
+ }
+
 }

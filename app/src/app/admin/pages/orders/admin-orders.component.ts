@@ -27,23 +27,23 @@ import { AdminService } from '../../services/admin.service';
         <div class="card-body">
           <div class="row g-3">
             <div class="col-md-4">
-              <input type="text" class="form-control" placeholder="Search orders...">
+              <input type="text" class="form-control" placeholder="Search orders..." [(ngModel)]="searchTerm">
             </div>
             <div class="col-md-3">
-              <select class="form-select">
+              <select class="form-select" [(ngModel)]="filterStatus">
                 <option value="">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="processing">Processing</option>
-                <option value="shipped">Shipped</option>
-                <option value="delivered">Delivered</option>
-                <option value="cancelled">Cancelled</option>
+                <option value="Pending">Pending</option>
+                <option value="Confirmed">Confirmed</option>
+                <option value="Shipped">Shipped</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Cancelled">Cancelled</option>
               </select>
             </div>
             <div class="col-md-3">
-              <input type="date" class="form-control" placeholder="Date range">
+              <input type="date" class="form-control" [(ngModel)]="filterDate">
             </div>
             <div class="col-md-2">
-              <button class="btn btn-secondary w-100">Search</button>
+              <button class="btn btn-secondary w-100" (click)="applyFilters()">Search</button>
             </div>
           </div>
         </div>
@@ -56,110 +56,50 @@ import { AdminService } from '../../services/admin.service';
             <table class="table table-hover align-middle">
               <thead class="table-light">
                 <tr>
-                  <th scope="col">Order ID</th>
-                  <th scope="col">Customer</th>
-                  <th scope="col">Date</th>
-                  <th scope="col">Items</th>
-                  <th scope="col">Total</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">Payment</th>
-                  <th scope="col" style="width: 120px;">Actions</th>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Date</th>
+                  <th>Items</th>
+                  <th>Status</th>
+                  <th>Payment</th>
+                   <th>Total</th>
+                 
+                  <th style="width: 120px;">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>#ORD-001</td>
-                  <td>John Doe</td>
-                  <td>2023-09-10</td>
-                  <td>3 items</td>
-                  <td>$120.00</td>
-                  <td><span class="badge bg-success">Delivered</span></td>
-                  <td><span class="badge bg-success">Paid</span></td>
+                <tr *ngFor="let order of filteredOrders">
+                  <td>#ORD-{{ order.id }}</td>
+                  <td>{{ order.user?.name || 'N/A' }}</td>
+                  <td>{{ order.orderDate | date:'yyyy-MM-dd' }}</td>
+                  <td>{{ order.orderItems?.length || 0 }} items</td>
+                  <td>{{ order.totalAmount | currency }}</td>
+                  <td>
+                    <span class="badge" [ngClass]="getStatusBadge(order.status)">
+                      {{ order.status }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="badge" [ngClass]="getPaymentBadge(order.paymentStatus)">
+                      {{ order.paymentStatus }}
+                    </span>
+                  </td>
                   <td>
                     <div class="btn-group">
-                      <button class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></button>
-                      <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-printer"></i></button>
+                      <button class="btn btn-sm btn-outline-primary" (click)="viewOrder(order.id)">
+                        <i class="bi bi-eye"></i>
+                      </button>
+                      <button class="btn btn-sm btn-outline-secondary" (click)="printOrder(order.id)">
+                        <i class="bi bi-printer"></i>
+                      </button>
                     </div>
                   </td>
                 </tr>
-                <tr>
-                  <td>#ORD-002</td>
-                  <td>Jane Smith</td>
-                  <td>2023-09-09</td>
-                  <td>2 items</td>
-                  <td>$85.50</td>
-                  <td><span class="badge bg-warning">Processing</span></td>
-                  <td><span class="badge bg-success">Paid</span></td>
-                  <td>
-                    <div class="btn-group">
-                      <button class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></button>
-                      <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-printer"></i></button>
-                    </div>
-                  </td>
-                </tr>
-                <tr>
-                  <td>#ORD-003</td>
-                  <td>Robert Johnson</td>
-                  <td>2023-09-08</td>
-                  <td>1 item</td>
-                  <td>$210.75</td>
-                  <td><span class="badge bg-info">Shipped</span></td>
-                  <td><span class="badge bg-success">Paid</span></td>
-                  <td>
-                    <div class="btn-group">
-                      <button class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></button>
-                      <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-printer"></i></button>
-                    </div>
-                  </td>
-                </tr>
-                <tr>
-                  <td>#ORD-004</td>
-                  <td>Sarah Williams</td>
-                  <td>2023-09-07</td>
-                  <td>5 items</td>
-                  <td>$345.25</td>
-                  <td><span class="badge bg-secondary">Pending</span></td>
-                  <td><span class="badge bg-warning">Pending</span></td>
-                  <td>
-                    <div class="btn-group">
-                      <button class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></button>
-                      <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-printer"></i></button>
-                    </div>
-                  </td>
-                </tr>
-                <tr>
-                  <td>#ORD-005</td>
-                  <td>Michael Brown</td>
-                  <td>2023-09-06</td>
-                  <td>2 items</td>
-                  <td>$89.99</td>
-                  <td><span class="badge bg-danger">Cancelled</span></td>
-                  <td><span class="badge bg-danger">Refunded</span></td>
-                  <td>
-                    <div class="btn-group">
-                      <button class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></button>
-                      <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-printer"></i></button>
-                    </div>
-                  </td>
+                <tr *ngIf="filteredOrders.length === 0">
+                  <td colspan="8" class="text-center py-3">No orders found</td>
                 </tr>
               </tbody>
             </table>
-          </div>
-        </div>
-        
-        <!-- Pagination -->
-        <div class="card-footer">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>Showing 1 to 5 of 25 entries</div>
-            <nav>
-              <ul class="pagination mb-0">
-                <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
-                <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                <li class="page-item"><a class="page-link" href="#">Next</a></li>
-              </ul>
-            </nav>
           </div>
         </div>
       </div>
@@ -167,11 +107,68 @@ import { AdminService } from '../../services/admin.service';
   `
 })
 export class AdminOrdersComponent implements OnInit {
-  
+  orders: any[] = [];
+  filteredOrders: any[] = [];
+
+  searchTerm: string = '';
+  filterStatus: string = '';
+  filterDate: string = '';
+
   constructor(private adminService: AdminService) {}
-  
+
   ngOnInit(): void {
-    // In a real app, fetch orders data from the service
-    // this.adminService.getOrders().subscribe(orders => { ... })
+    this.adminService.getOrders().subscribe({
+      next: (data) => {
+        this.orders = data;
+        this.filteredOrders = [...this.orders];
+      },
+      error: (err) => console.error('Failed to load orders:', err)
+    });
+  }
+
+  applyFilters() {
+    this.filteredOrders = this.orders.filter(order => {
+      const matchesSearch = this.searchTerm ? 
+        order.user?.name?.toLowerCase().includes(this.searchTerm.toLowerCase()) || 
+        order.id.toString().includes(this.searchTerm) : true;
+
+      const matchesStatus = this.filterStatus ? order.status === this.filterStatus : true;
+
+      const matchesDate = this.filterDate ? 
+        (new Date(order.orderDate).toISOString().split('T')[0] === this.filterDate) : true;
+
+      return matchesSearch && matchesStatus && matchesDate;
+    });
+  }
+
+  getStatusBadge(status: string): string {
+    switch (status) {
+      case 'Pending': return 'bg-secondary';
+      case 'Confirmed': return 'bg-warning';
+      case 'Shipped': return 'bg-info';
+      case 'Delivered': return 'bg-success';
+      case 'Cancelled': return 'bg-danger';
+      default: return 'bg-light';
+    }
+  }
+
+  getPaymentBadge(status: string): string {
+    switch (status) {
+      case 'Paid': return 'bg-success';
+      case 'Pending': return 'bg-warning';
+      case 'Failed': return 'bg-danger';
+      case 'Refunded': return 'bg-secondary';
+      default: return 'bg-light';
+    }
+  }
+
+  viewOrder(orderId: number) {
+    console.log('Viewing order:', orderId);
+    // Navigate to order detail page
+  }
+
+  printOrder(orderId: number) {
+    console.log('Printing order:', orderId);
+    // Trigger print
   }
 }
