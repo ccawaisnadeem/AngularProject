@@ -1,15 +1,18 @@
 
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { LocationComponent } from '../location/location';
 import { AuthService } from '../auth/services/auth.service';
+import { CartStateService } from '../services/cart-state.service';
+import { ToastNotificationComponent } from '../components/toast-notification/toast-notification.component';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, FormsModule, LocationComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, FormsModule, LocationComponent, ToastNotificationComponent],
   template: `
     <!-- home.html - Angular v20 + Bootstrap 5 E-commerce Page -->
     <div class="ecommerce-page d-flex flex-column min-vh-100">
@@ -149,12 +152,22 @@ import { AuthService } from '../auth/services/auth.service';
 
               <!-- Cart -->
               <li class="nav-item">
-                <a class="nav-link text-light fw-medium position-relative" href="#" aria-label="Shopping cart">
+                <a class="nav-link text-light fw-medium position-relative" routerLink="/cart" aria-label="Shopping cart">
                   <i class="bi bi-cart3 fs-4" aria-hidden="true"></i>
-                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" aria-hidden="true">
-                    0
+                  <span *ngIf="cartItemCount > 0" 
+                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger animate__animated animate__bounceIn" 
+                        aria-hidden="true">
+                    {{ cartItemCount }}
                   </span>
                   <span class="ms-1 d-none d-lg-inline">Cart</span>
+                </a>
+              </li>
+              
+              <!-- Orders -->
+              <li class="nav-item">
+                <a class="nav-link text-light fw-medium" routerLink="/orders" aria-label="My orders">
+                  <i class="bi bi-list-ul fs-4" aria-hidden="true"></i>
+                  <span class="ms-1 d-none d-lg-inline">Orders</span>
                 </a>
               </li>
             </ul>
@@ -200,6 +213,9 @@ import { AuthService } from '../auth/services/auth.service';
       <main class="container-fluid px-3 py-4" role="main" style="background-color: #a4a5a5ff;">
         <router-outlet></router-outlet>
       </main>
+
+      <!-- Toast Notifications -->
+      <app-toast-notification></app-toast-notification>
       
       <!-- Footer -->
       <footer class="bg-dark text-light py-4 mt-auto">
@@ -235,6 +251,24 @@ import { AuthService } from '../auth/services/auth.service';
     </div>
   `,
 })
-export class MainLayoutComponent {
-  constructor(public authService: AuthService) {}
+export class MainLayoutComponent implements OnInit, OnDestroy {
+  cartItemCount: number = 0;
+  private subscription = new Subscription();
+
+  constructor(
+    public authService: AuthService,
+    private cartStateService: CartStateService
+  ) {}
+
+  ngOnInit(): void {
+    this.subscription.add(
+      this.cartStateService.cart$.subscribe(cartState => {
+        this.cartItemCount = cartState.totalItems;
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
+  }
 }

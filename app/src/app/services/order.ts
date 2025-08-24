@@ -17,6 +17,10 @@ export interface Order {
   totalAmount: number;
   orderDate?: string;
   orderItems: OrderItem[];
+  deliveryAddress?: string;
+  trackingNumber?: string;
+  shipmentStatus?: string;
+  estimatedDelivery?: string;
 }
 
 @Injectable({
@@ -28,8 +32,20 @@ export class OrderService {
   constructor(private http: HttpClient) {}
 
   // Place order from cart
-  placeOrder(): Observable<Order> {
-    return this.http.post<Order>(`${this.apiUrl}/place`, {})
+  placeOrder(orderData: any): Observable<Order> {
+    return this.http.post<Order>(`${this.apiUrl}/place`, orderData)
+      .pipe(catchError(this.handleError));
+  }
+
+  // Update order status (admin only)
+  updateOrderStatus(orderId: number, status: string): Observable<Order> {
+    return this.http.put<Order>(`${this.apiUrl}/${orderId}/status`, { status })
+      .pipe(catchError(this.handleError));
+  }
+
+  // Get order tracking information
+  getOrderTracking(orderId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/${orderId}/tracking`)
       .pipe(catchError(this.handleError));
   }
 

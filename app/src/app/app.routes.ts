@@ -1,6 +1,11 @@
 import { Routes } from '@angular/router';
 import { Home } from './pages/home/home';
 import { Inventory } from './pages/inventory/inventory';
+import { CartComponent } from './pages/cart/cart.component';
+import { CheckoutComponent } from './pages/checkout/checkout.component';
+import { OrderConfirmationComponent } from './pages/order-confirmation/order-confirmation.component';
+import { OrdersComponent } from './pages/orders/orders.component';
+import { OrderTrackingComponent } from './pages/order-tracking/order-tracking.component';
 import { AuthGuard } from './auth/guards/auth.guard';
 import { MainLayoutComponent } from './layouts/main-layout.component';
 import { AdminGuard } from './admin/guards/admin.guard';
@@ -15,6 +20,11 @@ export const routes: Routes = [
         children: [
             { path: 'home', component: Home },
             { path: 'inventory', component: Inventory, canActivate: [AuthGuard] },
+            { path: 'cart', component: CartComponent, canActivate: [AuthGuard] },
+            { path: 'checkout', component: CheckoutComponent, canActivate: [AuthGuard] },
+            { path: 'order-confirmation/:id', component: OrderConfirmationComponent, canActivate: [AuthGuard] },
+            { path: 'orders', component: OrdersComponent, canActivate: [AuthGuard] },
+            { path: 'order-tracking/:id', component: OrderTrackingComponent, canActivate: [AuthGuard] },
             { path: '', redirectTo: 'home', pathMatch: 'full' }, // This ensures the layout shows even with empty path
         ]
     },

@@ -33,7 +33,19 @@
           <p class="description">{{ product.description | slice:0:70 }}...</p>
           
           <!-- Add to cart button -->
-          <button class="add-to-cart">Add to cart</button>
+          <button class="add-to-cart" 
+                  (click)="addToCart(product)"
+                  [disabled]="addingToCart[product.id!]"
+                  [class.in-cart]="isInCart(product.id!)">
+            <span *ngIf="!addingToCart[product.id!]">
+              <i class="bi bi-cart-plus me-1"></i>
+              {{ isInCart(product.id!) ? 'In Cart (' + getCartItemQuantity(product.id!) + ')' : 'Add to Cart' }}
+            </span>
+            <span *ngIf="addingToCart[product.id!]">
+              <i class="bi bi-hourglass-split me-1"></i>
+              Adding...
+            </span>
+          </button>
         </div>
       </div>
     </div>
