@@ -44,7 +44,8 @@ export interface PaymentIntent {
   providedIn: 'root'
 })
 export class StripeService {
-  private readonly apiUrl = `${environment.apiUrl}/StripeCheckout`;
+  //private readonly apiUrl = `${environment.apiUrl}/StripeCheckout`;
+  private readonly apiUrl = `${environment.apiUrl.replace('/api', '')}/StripeCheckout`;
   
   // Stripe instance
   private stripe: any = null;
@@ -135,31 +136,15 @@ export class StripeService {
    * Create checkout session
    */
   createCheckoutSession(data: CheckoutSessionRequest): Observable<CheckoutSessionResponse> {
-    // Get the auth token
-    const token = localStorage.getItem('access_token');
-    
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}` // Add token for authorization
-    });
-
-    // Log the request payload for debugging
-    console.log('Creating checkout session with data:', JSON.stringify(data, null, 2));
-    console.log('API URL:', `${this.apiUrl}/create-checkout-session`);
-    console.log('Auth token available:', !!token);
-
     return this.http.post<CheckoutSessionResponse>(
       `${this.apiUrl}/create-checkout-session`, 
-      data, 
-      { 
-        headers,
-        // Make sure we get the full error response
-        observe: 'body',
-        responseType: 'json',
-        withCredentials: true // Include credentials (cookies) in the request
-      }
+      data
+      // Let JWT interceptor handle auth automatically
     );
   }
+    
+
+    
 
   /**
    * Redirect to Stripe Checkout
@@ -189,22 +174,9 @@ export class StripeService {
    * Get checkout session details
    */
   getCheckoutSession(sessionId: string): Observable<StripeSessionDetails> {
-    // Get the auth token
-    const token = localStorage.getItem('access_token');
-    
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}` // Add token for authorization
-    });
-    
-    console.log(`Fetching checkout session: ${sessionId}, Auth token available: ${!!token}`);
-    
     return this.http.get<StripeSessionDetails>(
-      `${this.apiUrl}/session/${sessionId}`,
-      {
-        headers,
-        withCredentials: true // Include credentials in the request
-      }
+      `${this.apiUrl}/session/${sessionId}`
+      // Let JWT interceptor handle auth automatically
     );
   }
 

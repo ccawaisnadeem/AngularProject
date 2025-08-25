@@ -92,12 +92,9 @@ import { FormsModule } from '@angular/forms';
                   </div>
                 </div>
 
-                <!-- Stripe Card Element Container -->
-                <div *ngIf="selectedPaymentMethod === 'stripe'" class="stripe-card-container">
-                  <div id="card-element" class="form-control" style="height: 40px; padding: 10px;">
-                    <!-- Stripe Elements will create form elements here -->
-                  </div>
-                  <div id="card-errors" role="alert" class="text-danger mt-2"></div>
+                <div class="alert alert-info" role="alert">
+                  <i class="bi bi-info-circle me-2"></i>
+                  You will be redirected to Stripe's secure payment page to complete your purchase.
                 </div>
               </div>
             </div>
@@ -109,7 +106,7 @@ import { FormsModule } from '@angular/forms';
               <button 
                 type="button" 
                 class="btn btn-primary btn-lg"
-                [disabled]="checkoutForm.invalid || isProcessing || !isStripeReady"
+                [disabled]="checkoutForm.invalid || isProcessing"
                 (click)="processPayment()">
                 <span *ngIf="!isProcessing">
                   <i class="bi bi-lock me-2"></i>Pay {{ getTotalAmount() | currency }}
@@ -174,23 +171,6 @@ import { FormsModule } from '@angular/forms';
       padding: 2rem 0;
     }
 
-    .stripe-card-container {
-      margin-top: 1rem;
-    }
-
-    #card-element {
-      background-color: white;
-      border: 1px solid #ced4da;
-      border-radius: 0.375rem;
-      transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-    }
-
-    #card-element:focus-within {
-      border-color: #86b7fe;
-      outline: 0;
-      box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-    }
-
     .payment-methods {
       border: 1px solid #dee2e6;
       border-radius: 0.375rem;
@@ -208,11 +188,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   isProcessing = false;
   error: string | null = null;
   selectedPaymentMethod = 'stripe';
-  
-  // Stripe properties
-  private stripe: any;
-  private cardElement: any;
-  isStripeReady = false;
   
   private subscription = new Subscription();
 
@@ -237,7 +212,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadCurrentUser();
-    this.initializeStripe();
     
     this.subscription.add(
       this.cartStateService.cart$.subscribe(state => {
@@ -253,9 +227,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
-    if (this.cardElement) {
-      this.cardElement.destroy();
-    }
     this.stripeService.destroy();
   }
 
@@ -285,62 +256,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   );
 }
 
-
-  private async initializeStripe(): Promise<void> {
-    try {
-      // Wait for Stripe service to load
-      this.subscription.add(
-        this.stripeService.stripeLoaded$.subscribe(loaded => {
-          if (loaded) {
-            this.setupStripeElements();
-          }
-        })
-      );
-    } catch (error) {
-      console.error('Error loading Stripe:', error);
-      this.error = 'Failed to load payment system. Please refresh the page.';
-    }
-  }
-
-  private setupStripeElements(): void {
-    // Create card element using Stripe service
-    this.cardElement = this.stripeService.createElement('card', {
-      style: {
-        base: {
-          fontSize: '16px',
-          color: '#424770',
-          '::placeholder': {
-            color: '#aab7c4',
-          },
-        },
-        invalid: {
-          color: '#9e2146',
-        },
-      },
-    });
-
-    // Mount card element
-    setTimeout(() => {
-      const cardElementContainer = document.getElementById('card-element');
-      if (cardElementContainer) {
-        this.cardElement.mount('#card-element');
-        this.isStripeReady = true;
-      }
-    }, 100);
-
-    // Handle real-time validation errors
-    this.cardElement.on('change', (event: any) => {
-      const displayError = document.getElementById('card-errors');
-      if (displayError) {
-        if (event.error) {
-          displayError.textContent = event.error.message;
-        } else {
-          displayError.textContent = '';
-        }
-      }
-    });
-  }
-
   private loadProducts(): void {
     this.productService.getProducts().subscribe(products => {
       this.products = products;
@@ -348,7 +263,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   async processPayment(): Promise<void> {
-    if (this.checkoutForm.invalid || !this.isStripeReady) {
+    if (this.checkoutForm.invalid) {
       return;
     }
 
@@ -371,7 +286,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       // Prepare checkout data
       const checkoutData = {
         userId: this.currentUser?.id || 0,
-        cartId: this.currentUser?.id || 0,
+        cartId: this.cartState.cartId || this.currentUser?.id || 0,
         customerEmail: this.checkoutForm.get('email')?.value,
         lineItems: this.cartState.items.map((item: CartItem) => ({
           name: this.getProductName(item.productId),
