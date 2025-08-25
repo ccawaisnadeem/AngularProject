@@ -20,7 +20,7 @@ import { Subscription } from 'rxjs';
 
         <!-- Loading State -->
         <div *ngIf="cartState.isLoading" class="text-center py-5">
-          <div class="spinner-border text-primary"></div>
+          <div class="spinner-border text-warning"></div>
           <p class="mt-3">Loading your cart...</p>
         </div>
 
@@ -38,7 +38,7 @@ import { Subscription } from 'rxjs';
           <i class="bi bi-cart-x display-1 text-muted mb-3"></i>
           <h3 class="text-muted">Your cart is empty</h3>
           <p class="text-muted mb-4">Start shopping to add items to your cart</p>
-          <a routerLink="/inventory" class="btn btn-primary">Start Shopping</a>
+          <a routerLink="/home" class="btn btn-primary">Start Shopping</a>
         </div>
 
         <!-- Cart Items -->
@@ -78,7 +78,7 @@ import { Subscription } from 'rxjs';
                     <div class="col-md-2 text-end">
                       <button class="btn btn-sm btn-outline-danger" 
                               (click)="removeItem(item)">
-                        <i class="bi bi-trash"></i>
+                        <i class="bi bi-trash"></i> +
                       </button>
                     </div>
                   </div>
@@ -89,7 +89,7 @@ import { Subscription } from 'rxjs';
 
           <div class="col-lg-4">
             <div class="card">
-              <div class="card-header bg-primary text-white">
+              <div class="card-header bg-warning text-black">
                 <h5>Order Summary</h5>
               </div>
               <div class="card-body">
@@ -106,7 +106,7 @@ import { Subscription } from 'rxjs';
                   <span class="fw-bold">Total</span>
                   <span class="fw-bold">{{ getTotalAmount() | currency }}</span>
                 </div>
-                <button class="btn btn-primary w-100 mb-2" (click)="proceedToCheckout()">
+                <button class="btn btn-warning w-100 mb-2" (click)="proceedToCheckout()">
                   Proceed to Checkout
                 </button>
                 <button class="btn btn-outline-secondary w-100" (click)="continueShopping()">
@@ -192,7 +192,7 @@ export class CartComponent implements OnInit, OnDestroy {
   }
 
   continueShopping(): void {
-    this.router.navigate(['/inventory']);
+    this.router.navigate(['/home']);
   }
 
   retryLoad(): void {

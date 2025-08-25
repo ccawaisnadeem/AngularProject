@@ -9,9 +9,16 @@ import { Cart, CartItem } from '../Models/Cart.Model';
   providedIn: 'root'
 })
 export class CartService {
-  private apiUrl = `${environment.apiUrl}/Cart`;
+  private apiUrl = `${environment.apiUrl}/cart`;
+  private itemApi = `${environment.apiUrl}/cartitem`;
 
   constructor(private http: HttpClient) {}
+  // POST: create new cart
+createCart(data: { userId: number }): Observable<Cart> {
+  return this.http.post<Cart>(`${this.apiUrl}`, data)
+    .pipe(catchError(this.handleError));
+}
+
 
   //  Get active cart for user
   getCart(userId: number): Observable<Cart> {
@@ -19,27 +26,28 @@ export class CartService {
       .pipe(catchError(this.handleError));
   }
 
-  //  Add item to cart
-  addItem(cartId: number, productId: number, quantity: number, priceAtAdd: number): Observable<CartItem> {
-    return this.http.post<CartItem>(`${this.apiUrl}/items`, {
-      cartId,
-      productId,
-      quantity,
-      priceAtAdd
+
+   addItem(cartId: number, productId: number, quantity: number): Observable<CartItem> {
+    return this.http.post<CartItem>(`${this.itemApi}`, { 
+      cartId,      
+      productId,   
+      quantity     
     }).pipe(catchError(this.handleError));
   }
 
-  //  Update quantity of item
+  // ✅ Update this method  
   updateItem(itemId: number, quantity: number): Observable<CartItem> {
-    return this.http.put<CartItem>(`${this.apiUrl}/items/${itemId}`, { quantity })
+    return this.http.put<CartItem>(`${this.itemApi}/${itemId}`, { quantity })
       .pipe(catchError(this.handleError));
   }
 
-  //  Remove single item
+  // ✅ Update this method
   removeItem(itemId: number): Observable<any> {
-    return this.http.delete<any>(`${this.apiUrl}/items/${itemId}`)
+    return this.http.delete<any>(`${this.itemApi}/${itemId}`)
       .pipe(catchError(this.handleError));
   }
+
+
 
   //  Clear entire cart
   clearCart(cartId: number): Observable<any> {

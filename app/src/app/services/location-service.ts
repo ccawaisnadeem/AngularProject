@@ -43,9 +43,11 @@ export class LocationService {
   // Reverse geocoding with OpenStreetMap API
   getAddress(lat: number, lon: number): Observable<any> {
     console.log(`Fetching address for coordinates: ${lat}, ${lon}`);
+    // Use a CORS proxy to avoid CORS issues
+    // In production, you should set up your own proxy server or use a backend API
     return this.http.get(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&zoom=14`
-
+      `https://cors-anywhere.herokuapp.com/https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&zoom=14`,
+      { headers: { 'Origin': 'http://localhost:4200' } }
     );
     
   }

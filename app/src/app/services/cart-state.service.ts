@@ -1,10 +1,12 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
 import { catchError, tap, map, switchMap } from 'rxjs/operators';
 import { CartService } from './carts';
 import { Cart, CartItem } from '../Models/Cart.Model';
 import { Product } from './product';
 import { AuthService } from '../auth/services/auth.service';
+import { Router } from '@angular/router';
+import { NotificationService } from '../services/notification.service';
 
 export interface CartState {
   items: CartItem[];
@@ -31,18 +33,25 @@ export class CartStateService {
 
   constructor(
     private cartService: CartService,
-    private authService: AuthService
+    private authService: AuthService,
+    private router: Router,
+   private notificationService: NotificationService
   ) {
     this.initializeCart();
   }
 
+  // ------------------------------------------------------
+  // Init / Auth handling
+  // ------------------------------------------------------
   private initializeCart(): void {
     // Subscribe to auth changes to reload cart when user logs in/out
     this.authService.currentUser.subscribe(user => {
       if (user) {
         this.loadUserCart();
       } else {
-        this.clearCart();
+        // On logout → just reset local cart state (don’t call backend)
+        this.currentCartId = null;
+        this.updateCartState([]);
       }
     });
   }
@@ -54,7 +63,7 @@ export class CartStateService {
     this.setLoading(true);
     this.cartService.getCart(parseInt(user.id)).subscribe({
       next: (cart) => {
-        this.currentCartId = cart.id || null;
+        this.currentCartId = cart.id ?? null;
         this.updateCartState(cart.cartItems || []);
         this.setLoading(false);
       },
@@ -66,50 +75,94 @@ export class CartStateService {
     });
   }
 
+  // ------------------------------------------------------
+  // Public Cart API
+  // ------------------------------------------------------
   addToCart(product: Product, quantity: number = 1): Observable<boolean> {
-    const user = this.authService.currentUserValue;
-    if (!user?.id) {
-      this.setError('Please login to add items to cart');
-      return of(false);
-    }
-
-    this.setLoading(true);
-    this.setError(null);
-
-    // Check if item already exists in cart
-    const existingItem = this.cartSubject.value.items.find(
-      item => item.productId === product.id
-    );
-
-    if (existingItem) {
-      // Update existing item quantity
-      return this.updateItemQuantity(existingItem.id!, existingItem.quantity + quantity);
-    } else {
-      // Add new item
-      if (!this.currentCartId) {
-        // Create new cart first
-        return this.createCartAndAddItem(product, quantity);
-      } else {
-        return this.addItemToExistingCart(product, quantity);
-      }
-    }
+  const user = this.authService.currentUserValue;
+  if (!user?.id) {
+    this.notificationService.loginRequired();
+    this.router.navigate(['/login']);
+    return of(false);
   }
 
+  this.setLoading(true);
+  this.setError(null);
+
+  // First ensure we have a cart
+  if (!this.currentCartId) {
+    return this.createCartAndAddItem(product, quantity);
+  }
+
+  // Load fresh cart data to check for existing items
+  return this.cartService.getCart(parseInt(user.id)).pipe(
+    switchMap(cart => {
+      // Update local cart state with fresh data
+      this.currentCartId = cart.id ?? null;
+      this.updateCartState(cart.cartItems || []);
+
+      // Now check for existing item in the fresh data
+      const existingItem = (cart.cartItems || []).find(
+        item => item.productId === product.id
+      );
+
+      if (existingItem && existingItem.id) {
+        // Item exists → update quantity
+        console.log(`Product ${product.id} already in cart, updating quantity from ${existingItem.quantity} to ${existingItem.quantity + quantity}`);
+        return this.updateItemQuantity(existingItem.id, existingItem.quantity + quantity);
+      } else {
+        // Item doesn't exist → add new
+        console.log(`Adding new product ${product.id} to cart`);
+        return this.addItemToExistingCart(product, quantity);
+      }
+    }),
+    catchError(error => {
+      console.error('Error in addToCart:', error);
+      // If cart doesn't exist, create new one
+      if (error.status === 404) {
+        return this.createCartAndAddItem(product, quantity);
+      }
+      this.setError('Failed to add item to cart');
+      this.setLoading(false);
+      return of(false);
+    })
+  );
+}
+  // 🚨 Do NOT change — works already
   private createCartAndAddItem(product: Product, quantity: number): Observable<boolean> {
     const user = this.authService.currentUserValue;
     if (!user?.id) return of(false);
 
-    // Create new cart and add item
-    return this.cartService.getCart(parseInt(user.id)).pipe(
+    const userId = parseInt(user.id);
+
+    return this.cartService.getCart(userId).pipe(
       switchMap(cart => {
-        this.currentCartId = cart.id || null;
+        this.currentCartId = cart.id ?? null;
         return this.addItemToExistingCart(product, quantity);
       }),
       catchError(error => {
-        console.error('Error creating cart:', error);
-        this.setError('Failed to create cart');
-        this.setLoading(false);
-        return of(false);
+        console.log('Cart not found for user, creating new cart...', error);
+
+        return this.cartService.createCart({ userId }).pipe(
+          switchMap(newCart => {
+            if (!newCart?.id) {
+              console.error("Cart creation failed - no ID in response", newCart);
+              this.setError('Failed to create cart');
+              this.setLoading(false);
+              return of(false);
+            }
+
+            console.log('New cart created with ID:', newCart.id);
+            this.currentCartId = newCart.id;
+            return this.addItemToExistingCart(product, quantity);
+          }),
+          catchError(createError => {
+            console.error('Error creating cart:', createError);
+            this.setError('Failed to create cart. Please try again later.');
+            this.setLoading(false);
+            return of(false);
+          })
+        );
       })
     );
   }
@@ -120,11 +173,10 @@ export class CartStateService {
     return this.cartService.addItem(
       this.currentCartId,
       product.id!,
-      quantity,
-      product.price
+      quantity
     ).pipe(
       tap(() => {
-        this.loadUserCart(); // Reload cart to get updated state
+        this.loadUserCart();
       }),
       map(() => true),
       catchError(error => {
@@ -145,9 +197,7 @@ export class CartStateService {
     this.setError(null);
 
     return this.cartService.updateItem(itemId, quantity).pipe(
-      tap(() => {
-        this.loadUserCart(); // Reload cart to get updated state
-      }),
+      tap(() => this.loadUserCart()),
       map(() => true),
       catchError(error => {
         console.error('Error updating item quantity:', error);
@@ -163,9 +213,7 @@ export class CartStateService {
     this.setError(null);
 
     return this.cartService.removeItem(itemId).pipe(
-      tap(() => {
-        this.loadUserCart(); // Reload cart to get updated state
-      }),
+      tap(() => this.loadUserCart()),
       map(() => true),
       catchError(error => {
         console.error('Error removing item:', error);
@@ -177,15 +225,18 @@ export class CartStateService {
   }
 
   clearCart(): Observable<boolean> {
-    if (!this.currentCartId) {
+    const user = this.authService.currentUserValue;
+    if (!user?.id) {
       this.updateCartState([]);
       return of(true);
     }
 
+    const userId = parseInt(user.id);
+
     this.setLoading(true);
     this.setError(null);
 
-    return this.cartService.clearCart(this.currentCartId).pipe(
+    return this.cartService.clearCart(userId).pipe(
       tap(() => {
         this.currentCartId = null;
         this.updateCartState([]);
@@ -201,6 +252,9 @@ export class CartStateService {
     );
   }
 
+  // ------------------------------------------------------
+  // Helpers
+  // ------------------------------------------------------
   private updateCartState(items: CartItem[]): void {
     const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
     const totalPrice = items.reduce((sum, item) => sum + (item.priceAtAdd * item.quantity), 0);
@@ -216,21 +270,17 @@ export class CartStateService {
 
   private setLoading(isLoading: boolean): void {
     const currentState = this.cartSubject.value;
-    this.cartSubject.next({
-      ...currentState,
-      isLoading
-    });
+    this.cartSubject.next({ ...currentState, isLoading });
   }
 
   private setError(error: string | null): void {
     const currentState = this.cartSubject.value;
-    this.cartSubject.next({
-      ...currentState,
-      error
-    });
+    this.cartSubject.next({ ...currentState, error });
   }
 
-  // Getters for easy access
+  // ------------------------------------------------------
+  // Getters
+  // ------------------------------------------------------
   get cartItems(): CartItem[] {
     return this.cartSubject.value.items;
   }

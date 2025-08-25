@@ -19,11 +19,35 @@ class RefreshTokenState {
 
 const refreshTokenState = new RefreshTokenState();
 
+// Function to determine if a URL should skip authentication
+function shouldSkipAuth(url: string): boolean {
+  // Skip authentication for public endpoints
+  const publicEndpoints = [
+    '/auth/login',
+    '/auth/register',
+    '/auth/forgot-password',
+    '/auth/reset-password',
+    '/auth/refresh-token'
+  ];
+  
+  // Skip authentication for static resources
+  if (url.endsWith('.png') || url.endsWith('.jpg') || url.endsWith('.css') || url.endsWith('.js')) {
+    return true;
+  }
+  
+  return publicEndpoints.some(endpoint => url.includes(endpoint));
+}
+
 export const JwtInterceptor: HttpInterceptorFn = (
   request: HttpRequest<unknown>, 
   next: HttpHandlerFn
 ): Observable<HttpEvent<unknown>> => {
   const authService = inject(AuthService);
+  
+  // Skip token for certain endpoints
+  if (shouldSkipAuth(request.url)) {
+    return next(request);
+  }
   
   // Add auth header with jwt if user is logged in
   const token = authService.getToken();
@@ -39,6 +63,8 @@ export const JwtInterceptor: HttpInterceptorFn = (
         return handle401Error(request, next, authService);
       }
       
+      // Log all HTTP errors for debugging
+      console.error(`HTTP Error [${request.url}]:`, error);
       return throwError(() => error);
     })
   );
@@ -47,9 +73,11 @@ export const JwtInterceptor: HttpInterceptorFn = (
 function addToken(request: HttpRequest<unknown>, token: string): HttpRequest<unknown> {
   // Check if we should add the token to this request
   // Don't add token to requests to other domains or non-API requests
-  const isApiUrl = request.url.startsWith(environment.apiUrl);
+  const isApiUrl = request.url.includes(environment.apiUrl) || 
+                  request.url.startsWith('/api/') || 
+                  request.url.includes('localhost');
   
-  if (isApiUrl) {
+  if (isApiUrl && !shouldSkipAuth(request.url)) {
     console.log(`Adding token to request: ${request.url}`);
     return request.clone({
       setHeaders: {

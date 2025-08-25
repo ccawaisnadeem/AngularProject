@@ -28,45 +28,7 @@ export class App {
   
   constructor() {}
 
-  featuredProducts: Product[] = [
-    {
-      id: 1,
-      name: 'Wireless Bluetooth Headphones',
-      description: 'High-quality audio with noise cancellation',
-      price: 79.99,
-      image: 'https://via.placeholder.com/300x200/6c757d/ffffff?text=Headphones',
-      rating: 4,
-      reviewCount: 128
-    },
-    {
-      id: 2,
-      name: 'Smart Fitness Watch',
-      description: 'Track your health and fitness goals',
-      price: 199.99,
-      image: 'https://via.placeholder.com/300x200/0d6efd/ffffff?text=Smart+Watch',
-      rating: 5,
-      reviewCount: 89
-    },
-    {
-      id: 3,
-      name: 'Portable Power Bank',
-      description: '20000mAh fast charging power bank',
-      price: 29.99,
-      image: 'https://via.placeholder.com/300x200/198754/ffffff?text=Power+Bank',
-      rating: 4,
-      reviewCount: 256
-    },
-    {
-      id: 4,
-      name: 'Ergonomic Office Chair',
-      description: 'Comfortable chair for long work sessions',
-      price: 249.99,
-      image: 'https://via.placeholder.com/300x200/dc3545/ffffff?text=Office+Chair',
-      rating: 5,
-      reviewCount: 67
-    }
-  ];
-
+ 
   // Component methods
   toggleMobileMenu(): void {
     // Bootstrap handles the toggle automatically

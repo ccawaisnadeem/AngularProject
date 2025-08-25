@@ -9,6 +9,9 @@ import { OrderTrackingComponent } from './pages/order-tracking/order-tracking.co
 import { AuthGuard } from './auth/guards/auth.guard';
 import { MainLayoutComponent } from './layouts/main-layout.component';
 import { AdminGuard } from './admin/guards/admin.guard';
+import { CheckoutSuccessComponent } from './pages/checkout/CheckoutSuccessComponent';
+import { CheckoutCancelComponent } from './pages/checkout/CheckoutCancelComponent';
+
 
 export const routes: Routes = [
     { path: '', redirectTo: '/home', pathMatch: 'full' },
@@ -22,6 +25,8 @@ export const routes: Routes = [
             { path: 'inventory', component: Inventory, canActivate: [AuthGuard] },
             { path: 'cart', component: CartComponent, canActivate: [AuthGuard] },
             { path: 'checkout', component: CheckoutComponent, canActivate: [AuthGuard] },
+            { path: 'checkout/success', component: CheckoutSuccessComponent, canActivate: [AuthGuard] },
+            { path: 'checkout/cancel', component: CheckoutCancelComponent, canActivate: [AuthGuard] },
             { path: 'order-confirmation/:id', component: OrderConfirmationComponent, canActivate: [AuthGuard] },
             { path: 'orders', component: OrdersComponent, canActivate: [AuthGuard] },
             { path: 'order-tracking/:id', component: OrderTrackingComponent, canActivate: [AuthGuard] },
