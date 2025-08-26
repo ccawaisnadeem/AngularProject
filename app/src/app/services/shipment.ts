@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { ShipmentStatus } from './order';
 
 export interface Shipment {
   id?: number;
@@ -10,7 +11,7 @@ export interface Shipment {
   courierName?: string;
   shipmentDate?: string;
   deliveryDate?: string;
-  status: string;
+  status: ShipmentStatus;
 }
 
 @Injectable({

@@ -14,6 +14,7 @@ export interface CartState {
   totalPrice: number;
   isLoading: boolean;
   error: string | null;
+  isEmpty: boolean;
 }
 
 @Injectable({
@@ -25,7 +26,8 @@ export class CartStateService {
     totalItems: 0,
     totalPrice: 0,
     isLoading: false,
-    error: null
+    error: null,
+    isEmpty: true
   });
 
   public cart$ = this.cartSubject.asObservable();
@@ -43,37 +45,46 @@ export class CartStateService {
   // ------------------------------------------------------
   // Init / Auth handling
   // ------------------------------------------------------
-  private initializeCart(): void {
-    // Subscribe to auth changes to reload cart when user logs in/out
-    this.authService.currentUser.subscribe(user => {
-      if (user) {
-        this.loadUserCart();
-      } else {
-        // On logout → just reset local cart state (don’t call backend)
-        this.currentCartId = null;
-        this.updateCartState([]);
-      }
-    });
-  }
+private initializeCart(): void {
+  // Subscribe to auth changes to reload cart when user logs in/out
+  this.authService.currentUser.subscribe(user => {
+    if (user) {
+      // On login → clear cart first, then load user cart
+      this.currentCartId = null;
+      this.updateCartState([]);
+      this.loadUserCart();
+    } else {
+      // On logout → clear cart state
+      this.currentCartId = null;
+      this.updateCartState([]);
+    }
+  });
+}
 
   private loadUserCart(): void {
-    const user = this.authService.currentUserValue;
-    if (!user?.id) return;
+  const user = this.authService.currentUserValue;
+  if (!user?.id) return;
 
-    this.setLoading(true);
-    this.cartService.getCart(parseInt(user.id)).subscribe({
-      next: (cart) => {
-        this.currentCartId = cart.id ?? null;
-        this.updateCartState(cart.cartItems || []);
-        this.setLoading(false);
-      },
-      error: (error) => {
-        console.error('Error loading cart:', error);
-        this.setError('Failed to load cart');
-        this.setLoading(false);
-      }
-    });
-  }
+  this.setLoading(true);
+  this.setError(null);
+  
+  this.cartService.getCart(parseInt(user.id)).subscribe({
+    next: (cart) => {
+      this.currentCartId = cart.id ?? null;
+      this.updateCartState(cart.cartItems || []);
+      this.setLoading(false);
+    },
+    error: (error) => {
+      console.error('Error loading cart:', error);
+      // If cart doesn't exist (404) or any error, just show empty cart
+      console.log('No cart found for user, starting with empty cart');
+      this.currentCartId = null;
+      this.updateCartState([]);
+      this.setLoading(false);
+      // Don't set error - just show empty cart state
+    }
+  });
+}
 
   // ------------------------------------------------------
   // Public Cart API
@@ -264,7 +275,8 @@ export class CartStateService {
       totalItems,
       totalPrice,
       isLoading: false,
-      error: null
+      error: null,
+      isEmpty: items.length === 0
     });
   }
 

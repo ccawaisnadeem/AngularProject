@@ -26,10 +26,10 @@ import { RouterLink } from '@angular/router';
           </div>
 
           <div class="d-grid gap-2 d-md-block mt-4">
-            <a routerLink="/checkout" class="btn btn-primary">
+            <a routerLink="/checkout" class="btn btn-warning">
               <i class="bi bi-arrow-left me-2"></i>Back to Checkout
             </a>
-            <a routerLink="/cart" class="btn btn-outline-primary">
+            <a routerLink="/cart" class="btn btn-outline-warning">
               <i class="bi bi-cart me-2"></i>Review Cart
             </a>
             <a routerLink="/home" class="btn btn-outline-secondary">

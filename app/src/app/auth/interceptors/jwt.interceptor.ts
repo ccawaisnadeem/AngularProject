@@ -77,7 +77,10 @@ function addToken(request: HttpRequest<unknown>, token: string): HttpRequest<unk
                   request.url.startsWith('/api/') || 
                   request.url.includes('localhost');
   
-  if (isApiUrl && !shouldSkipAuth(request.url)) {
+  // Always add token to Stripe API requests
+  const isStripeRequest = request.url.includes('StripeCheckout');
+  
+  if ((isApiUrl && !shouldSkipAuth(request.url)) || isStripeRequest) {
     console.log(`Adding token to request: ${request.url}`);
     return request.clone({
       setHeaders: {
@@ -100,26 +103,47 @@ function handle401Error(
       request.url.includes('/auth/refresh-token')) {
     return throwError(() => new Error('Authentication failed'));
   }
+  
+  // Check if StripeCheckout endpoint - special handling to avoid refresh token issues
+  if (request.url.includes('/StripeCheckout')) {
+    console.log('Stripe endpoint auth failure, redirecting to login...');
+    authService.logout(); // Force logout if Stripe auth fails
+    
+    // Return specific error for Stripe endpoints
+    return throwError(() => new Error('Authentication required for payment. Please log in again.'));
+  }
 
   if (!refreshTokenState.isRefreshing) {
     console.log('Token expired, attempting to refresh...');
     refreshTokenState.isRefreshing = true;
     refreshTokenState.refreshTokenSubject.next(null);
 
-    return authService.refreshToken().pipe(
-      switchMap(response => {
-        console.log('Token refreshed successfully');
-        refreshTokenState.isRefreshing = false;
-        refreshTokenState.refreshTokenSubject.next(response.token);
-        return next(addToken(request, response.token));
-      }),
-      catchError(error => {
-        console.error('Failed to refresh token:', error);
-        refreshTokenState.isRefreshing = false;
-        authService.logout();
-        return throwError(() => error);
-      })
-    );
+    // Try to refresh token with additional error handling
+    try {
+      return authService.refreshToken().pipe(
+        switchMap(response => {
+          if (!response || !response.token) {
+            throw new Error('Invalid refresh token response');
+          }
+          
+          console.log('Token refreshed successfully');
+          refreshTokenState.isRefreshing = false;
+          refreshTokenState.refreshTokenSubject.next(response.token);
+          return next(addToken(request, response.token));
+        }),
+        catchError(error => {
+          console.error('Failed to refresh token:', error);
+          refreshTokenState.isRefreshing = false;
+          authService.logout();
+          return throwError(() => new Error('Session expired. Please log in again.'));
+        })
+      );
+    } catch (error) {
+      console.error('Exception in token refresh:', error);
+      refreshTokenState.isRefreshing = false;
+      authService.logout();
+      return throwError(() => error);
+    }
   }
 
   return refreshTokenState.refreshTokenSubject.pipe(

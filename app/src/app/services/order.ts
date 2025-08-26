@@ -9,18 +9,45 @@ export interface OrderItem {
   priceAtPurchase: number;
 }
 
+export enum OrderStatus {
+  Pending = 0,
+  Confirmed = 1,
+  Shipped = 2,
+  Delivered = 3,
+  Cancelled = 4
+}
+
+export enum PaymentStatus {
+  Pending = 0,
+  Paid = 1,
+  Failed = 2,
+  Refunded = 3
+}
+
+export enum ShipmentStatus {
+  Pending = 0,
+  InTransit = 1,
+  Delivered = 2,
+  Returned = 3
+}
+
 export interface Order {
   id?: number;
   userId?: number;
-  status?: string;
-  paymentStatus?: string;
+  orderStatus?: OrderStatus;
+  paymentStatus?: PaymentStatus;
   totalAmount: number;
-  orderDate?: string;
+  createdAt?: string;
   orderItems: OrderItem[];
-  deliveryAddress?: string;
-  trackingNumber?: string;
-  shipmentStatus?: string;
-  estimatedDelivery?: string;
+  shipment?: {
+    id?: number;
+    orderId?: number;
+    trackingNumber?: string;
+    courierName?: string;
+    shipmentDate?: string;
+    deliveryDate?: string;
+    status?: ShipmentStatus;
+  };
 }
 
 @Injectable({
@@ -31,10 +58,35 @@ export class OrderService {
 
   constructor(private http: HttpClient) {}
 
-  // Place order from cart
-  placeOrder(orderData: any): Observable<Order> {
-    return this.http.post<Order>(`${this.apiUrl}/place`, orderData)
+  // Checkout user's cart - creates order from existing cart
+  checkoutCart(userId: number): Observable<Order> {
+    return this.http.post<Order>(`${this.apiUrl}/checkout/${userId}`, {})
       .pipe(catchError(this.handleError));
+  }
+  
+  // Confirm payment after successful Stripe payment - creates order and clears cart
+  confirmPayment(userId: number, paymentData: any): Observable<Order> {
+    return this.http.post<Order>(`${this.apiUrl}/confirm-payment/${userId}`, {
+      stripeSessionId: paymentData.sessionId || '',
+      customerEmail: paymentData.customerEmail || '',
+      totalAmount: paymentData.totalAmount || 0
+    }).pipe(catchError(this.handleError));
+  }
+  
+  // Create order after successful payment - use confirm-payment endpoint
+  createOrderFromSession(sessionData: any): Observable<Order> {
+    const userId = sessionData.userId || 0;
+    return this.confirmPayment(userId, {
+      sessionId: sessionData.sessionId,
+      customerEmail: sessionData.customerEmail,
+      totalAmount: sessionData.totalAmount
+    });
+  }
+
+  // Place order from cart - use checkout endpoint
+  placeOrder(orderData: any): Observable<Order> {
+    const userId = orderData.userId || 0;
+    return this.checkoutCart(userId);
   }
 
   // Update order status (admin only)
@@ -49,12 +101,44 @@ export class OrderService {
       .pipe(catchError(this.handleError));
   }
 
-  // Get logged-in user's orders
-  getUserOrders(): Observable<Order[]> {
-    return this.http.get<Order[]>(`${this.apiUrl}/user`)
-      .pipe(catchError(this.handleError));
-  }
+  // Get logged-in user's orders - updated to match backend endpoint
+  getUserOrders(userId: number): Observable<Order[]> {
+  return this.http.get<Order[]>(`${this.apiUrl}/user/${userId}`)
+    .pipe(
+      catchError((error) => {
+        console.error('Error fetching user orders:', error);
+        
+        // If 404 or no orders found, return empty array instead of error
+        if (error.status === 404) {
+          console.log('No orders found for user, returning empty array');
+          return new Observable<Order[]>(observer => {
+            observer.next([]);
+            observer.complete();
+          });
+        }
+        
+        // For other errors, still throw error
+        return throwError(() => error);
+      })
+    );
+}
 
+  // Get logged-in user's orders (convenience method)
+  getCurrentUserOrders(): Observable<Order[]> {
+  // Get user ID from auth service or localStorage
+  const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+  const userId = parseInt(user.id) || 0;
+  
+  if (!userId) {
+    // If no user ID, return empty array instead of making API call
+    return new Observable(observer => {
+      observer.next([]);
+      observer.complete();
+    });
+  }
+  
+  return this.getUserOrders(userId);
+}
   // Get order details by ID
   getOrderById(id: number): Observable<Order> {
     return this.http.get<Order>(`${this.apiUrl}/${id}`)

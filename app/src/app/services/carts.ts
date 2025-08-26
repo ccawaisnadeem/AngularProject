@@ -49,8 +49,14 @@ createCart(data: { userId: number }): Observable<Cart> {
 
 
 
-  //  Clear entire cart
-  clearCart(cartId: number): Observable<any> {
+  //  Clear entire cart - using the correct backend endpoint
+  clearCart(userId: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/clear/${userId}`)
+      .pipe(catchError(this.handleError));
+  }
+  
+  // Clear cart by cart ID - alternative method if needed
+  clearCartById(cartId: number): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/${cartId}`)
       .pipe(catchError(this.handleError));
   }

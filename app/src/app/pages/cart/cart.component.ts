@@ -38,7 +38,7 @@ import { Subscription } from 'rxjs';
           <i class="bi bi-cart-x display-1 text-muted mb-3"></i>
           <h3 class="text-muted">Your cart is empty</h3>
           <p class="text-muted mb-4">Start shopping to add items to your cart</p>
-          <a routerLink="/home" class="btn btn-primary">Start Shopping</a>
+          <a routerLink="/home" class="btn btn-warning">Start Shopping</a>
         </div>
 
         <!-- Cart Items -->

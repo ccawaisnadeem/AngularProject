@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, ActivatedRoute } from '@angular/router';
-import { OrderService, Order } from '../../services/order';
+import { ActivatedRoute } from '@angular/router';
+import { OrderService, Order, OrderStatus, PaymentStatus, ShipmentStatus } from '../../services/order';
 import { ProductService, Product } from '../../services/product';
 import { ShipmentService, Shipment } from '../../services/shipment';
 import { NotificationService } from '../../services/notification.service';
@@ -17,7 +17,7 @@ interface TrackingEvent {
 @Component({
   selector: 'app-order-tracking',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   template: `
     <div class="order-tracking-page">
       <div class="container">
@@ -47,15 +47,15 @@ interface TrackingEvent {
                   <strong>Order ID:</strong> #{{ order.id }}
                 </div>
                 <div class="mb-3">
-                  <strong>Order Date:</strong> {{ order.orderDate | date:'medium' }}
+                  <strong>Order Date:</strong> {{ order.createdAt | date:'medium' }}
                 </div>
                 <div class="mb-3">
                   <strong>Status:</strong> 
-                  <span class="badge bg-primary">{{ order.status }}</span>
+                  <span class="badge" [ngClass]="getOrderStatusClass(order.orderStatus)">{{ getOrderStatusText(order.orderStatus) }}</span>
                 </div>
                 <div class="mb-3">
                   <strong>Payment Status:</strong> 
-                  <span class="badge bg-success">{{ order.paymentStatus }}</span>
+                  <span class="badge" [ngClass]="getPaymentStatusClass(order.paymentStatus)">{{ getPaymentStatusText(order.paymentStatus) }}</span>
                 </div>
                 <div class="mb-3">
                   <strong>Total Amount:</strong> {{ order.totalAmount | currency }}
@@ -140,26 +140,26 @@ interface TrackingEvent {
                       <i class="bi bi-check-circle text-success me-2"></i>
                       <span>Order Placed</span>
                     </div>
-                                         <div class="status-item" [class.active]="shipment?.status === 'Confirmed'">
-                       <i class="bi" [class]="shipment?.status === 'Confirmed' ? 'bi-check-circle text-success' : 'bi-circle text-muted'"></i>
+                                         <div class="status-item" [class.active]="order && order.orderStatus === OrderStatus.Confirmed">
+                       <i class="bi" [class]="order && order.orderStatus === OrderStatus.Confirmed ? 'bi-check-circle text-success' : 'bi-circle text-muted'"></i>
                        <span>Order Confirmed</span>
                      </div>
-                     <div class="status-item" [class.active]="shipment?.status === 'Shipped'">
-                       <i class="bi" [class]="shipment?.status === 'Shipped' ? 'bi-check-circle text-success' : 'bi-circle text-muted'"></i>
+                     <div class="status-item" [class.active]="order && order.orderStatus === OrderStatus.Shipped">
+                       <i class="bi" [class]="order && order.orderStatus === OrderStatus.Shipped ? 'bi-check-circle text-success' : 'bi-circle text-muted'"></i>
                        <span>Order Shipped</span>
                      </div>
                    </div>
                    <div class="col-md-6">
-                     <div class="status-item" [class.active]="shipment?.status === 'In Transit'">
-                       <i class="bi" [class]="shipment?.status === 'In Transit' ? 'bi-check-circle text-success' : 'bi-circle text-muted'"></i>
+                     <div class="status-item" [class.active]="shipment?.status === ShipmentStatus.InTransit">
+                       <i class="bi" [class]="shipment?.status === ShipmentStatus.InTransit ? 'bi-check-circle text-success' : 'bi-circle text-muted'"></i>
                        <span>In Transit</span>
                      </div>
-                     <div class="status-item" [class.active]="shipment?.status === 'Out for Delivery'">
-                       <i class="bi" [class]="shipment?.status === 'Out for Delivery' ? 'bi-check-circle text-success' : 'bi-circle text-muted'"></i>
+                     <div class="status-item" [class.active]="order && order.orderStatus === OrderStatus.Delivered">
+                       <i class="bi" [class]="order && order.orderStatus === OrderStatus.Delivered ? 'bi-check-circle text-success' : 'bi-circle text-muted'"></i>
                        <span>Out for Delivery</span>
                      </div>
-                     <div class="status-item" [class.active]="shipment?.status === 'Delivered'">
-                       <i class="bi" [class]="shipment?.status === 'Delivered' ? 'bi-check-circle text-success' : 'bi-circle text-muted'"></i>
+                     <div class="status-item" [class.active]="shipment?.status === ShipmentStatus.Delivered">
+                       <i class="bi" [class]="shipment?.status === ShipmentStatus.Delivered ? 'bi-check-circle text-success' : 'bi-circle text-muted'"></i>
                        <span>Delivered</span>
                      </div>
                   </div>
@@ -247,6 +247,11 @@ export class OrderTrackingComponent implements OnInit {
   isLoading = false;
   error: string | null = null;
 
+  // Expose enums to template
+  OrderStatus = OrderStatus;
+  PaymentStatus = PaymentStatus;
+  ShipmentStatus = ShipmentStatus;
+
   constructor(
     private route: ActivatedRoute,
     private orderService: OrderService,
@@ -312,7 +317,7 @@ export class OrderTrackingComponent implements OnInit {
     
     // Add order placed event
     events.push({
-      date: this.order?.orderDate || new Date().toISOString().split('T')[0],
+      date: this.order?.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0],
       time: new Date().toLocaleTimeString(),
       status: 'Order Placed',
       location: 'Online Store',
@@ -330,7 +335,7 @@ export class OrderTrackingComponent implements OnInit {
       });
     }
 
-    if (shipment.status === 'In Transit') {
+    if (shipment.status === ShipmentStatus.InTransit) {
       events.push({
         date: new Date().toISOString().split('T')[0],
         time: new Date().toLocaleTimeString(),
@@ -340,17 +345,7 @@ export class OrderTrackingComponent implements OnInit {
       });
     }
 
-    if (shipment.status === 'Out for Delivery') {
-      events.push({
-        date: new Date().toISOString().split('T')[0],
-        time: new Date().toLocaleTimeString(),
-        status: 'Out for Delivery',
-        location: 'Local Facility',
-        description: 'Package is out for delivery'
-      });
-    }
-
-    if (shipment.status === 'Delivered' && shipment.deliveryDate) {
+    if (shipment.status === ShipmentStatus.Delivered && shipment.deliveryDate) {
       events.push({
         date: shipment.deliveryDate.split('T')[0],
         time: new Date(shipment.deliveryDate).toLocaleTimeString(),
@@ -371,5 +366,124 @@ export class OrderTrackingComponent implements OnInit {
   getProductImage(productId: number): string {
     const product = this.products.find(p => p.id === productId);
     return product?.image || 'https://via.placeholder.com/40x40';
+  }
+
+  // Helper methods for enum text display
+  getOrderStatusText(status: OrderStatus | undefined): string {
+    if (status === undefined || status === null) return 'Unknown';
+    switch (status) {
+      case OrderStatus.Pending:
+        return 'Pending';
+      case OrderStatus.Confirmed:
+        return 'Confirmed';
+      case OrderStatus.Shipped:
+        return 'Shipped';
+      case OrderStatus.Delivered:
+        return 'Delivered';
+      case OrderStatus.Cancelled:
+        return 'Cancelled';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  getPaymentStatusText(status: PaymentStatus | undefined): string {
+    if (status === undefined || status === null) return 'Unknown';
+    switch (status) {
+      case PaymentStatus.Pending:
+        return 'Pending';
+      case PaymentStatus.Paid:
+        return 'Paid';
+      case PaymentStatus.Failed:
+        return 'Failed';
+      case PaymentStatus.Refunded:
+        return 'Refunded';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  getShipmentStatusText(status: ShipmentStatus | undefined): string {
+    if (status === undefined || status === null) return 'Unknown';
+    switch (status) {
+      case ShipmentStatus.Pending:
+        return 'Pending';
+      case ShipmentStatus.InTransit:
+        return 'In Transit';
+      case ShipmentStatus.Delivered:
+        return 'Delivered';
+      case ShipmentStatus.Returned:
+        return 'Returned';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  // Helper methods for status styling
+  getOrderStatusClass(status: OrderStatus | undefined): string {
+    if (status === undefined || status === null) return 'bg-light text-dark';
+    switch (status) {
+      case OrderStatus.Pending:
+        return 'bg-warning text-dark';
+      case OrderStatus.Confirmed:
+        return 'bg-primary';
+      case OrderStatus.Shipped:
+        return 'bg-secondary';
+      case OrderStatus.Delivered:
+        return 'bg-success';
+      case OrderStatus.Cancelled:
+        return 'bg-danger';
+      default:
+        return 'bg-light text-dark';
+    }
+  }
+
+  getPaymentStatusClass(status: PaymentStatus | undefined): string {
+    if (status === undefined || status === null) return 'bg-light text-dark';
+    switch (status) {
+      case PaymentStatus.Pending:
+        return 'bg-warning text-dark';
+      case PaymentStatus.Paid:
+        return 'bg-success';
+      case PaymentStatus.Failed:
+        return 'bg-danger';
+      case PaymentStatus.Refunded:
+        return 'bg-secondary';
+      default:
+        return 'bg-light text-dark';
+    }
+  }
+
+  getShipmentStatusClass(status: ShipmentStatus | undefined): string {
+    if (status === undefined || status === null) return 'bg-light text-dark';
+    switch (status) {
+      case ShipmentStatus.Pending:
+        return 'bg-warning text-dark';
+      case ShipmentStatus.InTransit:
+        return 'bg-info';
+      case ShipmentStatus.Delivered:
+        return 'bg-success';
+      case ShipmentStatus.Returned:
+        return 'bg-danger';
+      default:
+        return 'bg-light text-dark';
+    }
+  }
+
+  // Helper methods for shipment status checks
+  isShipmentPending(): boolean {
+    return this.shipment?.status === ShipmentStatus.Pending;
+  }
+
+  isShipmentInTransit(): boolean {
+    return this.shipment?.status === ShipmentStatus.InTransit;
+  }
+
+  isShipmentDelivered(): boolean {
+    return this.shipment?.status === ShipmentStatus.Delivered;
+  }
+
+  isShipmentReturned(): boolean {
+    return this.shipment?.status === ShipmentStatus.Returned;
   }
 }

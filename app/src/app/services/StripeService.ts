@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { environment } from '../../environments/environment';
 
-// Interfaces
+// Interfaces that match backend exactly
 export interface CheckoutSessionRequest {
   userId: number;
   cartId: number;
@@ -16,7 +16,7 @@ export interface CheckoutLineItem {
   description: string;
   price: number;
   quantity: number;
-  imageUrl?: string;
+  imageUrl?: string | null; // Allow null as a valid value
 }
 
 export interface CheckoutSessionResponse {
@@ -32,20 +32,12 @@ export interface StripeSessionDetails {
   currency: string;
 }
 
-export interface PaymentIntent {
-  id: string;
-  amount: number;
-  currency: string;
-  status: string;
-  clientSecret: string;
-}
-
 @Injectable({
   providedIn: 'root'
 })
 export class StripeService {
-  //private readonly apiUrl = `${environment.apiUrl}/StripeCheckout`;
-  private readonly apiUrl = `${environment.apiUrl.replace('/api', '')}/StripeCheckout`;
+  // Fixed API URL - matches backend route exactly
+  private readonly apiUrl = `${environment.apiUrl}/StripeCheckout`;
   
   // Stripe instance
   private stripe: any = null;
@@ -92,7 +84,6 @@ export class StripeService {
    */
   private initializeStripe(): void {
     try {
-      // Use environment variable for the publishable key
       const publishableKey = environment.stripePublishableKey;
       if (!publishableKey) {
         console.error('Stripe publishable key is missing');
@@ -100,17 +91,13 @@ export class StripeService {
         return;
       }
       
-      // Log for debugging
-      console.log('Initializing Stripe with key:', publishableKey.substring(0, 8) + '...');
-      
-      // Create Stripe instance with specific options
+      // Initialize Stripe with proper configuration
       this.stripe = window.Stripe(publishableKey, {
-        apiVersion: '2023-10-16', // Use a specific API version
-        locale: 'en', // Set locale
-        betas: ['captcha_beta_1'] // Enable necessary betas for hCaptcha
+        apiVersion: '2022-11-15',  // Use a stable API version
+        locale: 'auto'             // Use browser's locale
       });
       
-      console.log('Stripe initialized successfully');
+      console.log('Stripe initialized successfully with key:', publishableKey.substring(0, 8) + '...');
       this.stripeLoaded.next(true);
     } catch (error) {
       console.error('Error initializing Stripe:', error);
@@ -133,18 +120,37 @@ export class StripeService {
   }
 
   /**
-   * Create checkout session
+   * Create checkout session - JWT token automatically attached by interceptor
    */
   createCheckoutSession(data: CheckoutSessionRequest): Observable<CheckoutSessionResponse> {
+    console.log('Creating checkout session with API URL:', `${this.apiUrl}/create-checkout-session`);
+    console.log('Request data:', JSON.stringify(data, null, 2));
+    
+    // Ensure the request matches the backend expectations exactly
+    const validData: CheckoutSessionRequest = {
+      userId: data.userId || 0,
+      cartId: data.cartId || 0,
+      customerEmail: data.customerEmail || '',
+      lineItems: data.lineItems.map(item => ({
+        name: item.name || '',
+        description: item.description || '',
+        price: item.price || 0,
+        quantity: item.quantity || 0,
+        // Don't convert null to empty string - backend expects either valid URL or null
+        imageUrl: item.imageUrl 
+      }))
+    };
+    
     return this.http.post<CheckoutSessionResponse>(
       `${this.apiUrl}/create-checkout-session`, 
-      data
-      // Let JWT interceptor handle auth automatically
+      validData,
+      {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
     );
   }
-    
-
-    
 
   /**
    * Redirect to Stripe Checkout
@@ -171,91 +177,23 @@ export class StripeService {
   }
 
   /**
-   * Get checkout session details
+   * Get checkout session details - JWT token automatically attached by interceptor
    */
   getCheckoutSession(sessionId: string): Observable<StripeSessionDetails> {
     return this.http.get<StripeSessionDetails>(
       `${this.apiUrl}/session/${sessionId}`
-      // Let JWT interceptor handle auth automatically
     );
-  }
-
-  /**
-   * Create Stripe Elements
-   */
-  createElement(type: string, options?: any): any {
-    if (!this.isStripeReady()) {
-      throw new Error('Stripe is not loaded yet');
-    }
-
-    const elements = this.stripe.elements();
-    return elements.create(type, options);
-  }
-
-  /**
-   * Create payment intent (for custom payment flows)
-   */
-  createPaymentIntent(amount: number, currency: string = 'usd'): Observable<PaymentIntent> {
-    const data = { amount, currency };
-    return this.http.post<PaymentIntent>(`${this.apiUrl}/create-payment-intent`, data);
-  }
-
-  /**
-   * Confirm payment with payment method
-   */
-  async confirmPayment(clientSecret: string, paymentMethod: any): Promise<any> {
-    if (!this.isStripeReady()) {
-      throw new Error('Stripe is not loaded yet');
-    }
-
-    this.isProcessing.next(true);
-
-    try {
-      const result = await this.stripe.confirmPayment({
-        payment_method: paymentMethod,
-        client_secret: clientSecret,
-        return_url: `${environment.frontendUrl}/checkout/success`
-      });
-
-      this.isProcessing.next(false);
-      return result;
-    } catch (error) {
-      this.isProcessing.next(false);
-      throw error;
-    }
-  }
-
-  /**
-   * Confirm card payment
-   */
-  async confirmCardPayment(clientSecret: string, cardElement: any, billingDetails?: any): Promise<any> {
-    if (!this.isStripeReady()) {
-      throw new Error('Stripe is not loaded yet');
-    }
-
-    this.isProcessing.next(true);
-
-    try {
-      const result = await this.stripe.confirmCardPayment(clientSecret, {
-        payment_method: {
-          card: cardElement,
-          billing_details: billingDetails
-        }
-      });
-
-      this.isProcessing.next(false);
-      return result;
-    } catch (error) {
-      this.isProcessing.next(false);
-      throw error;
-    }
   }
 
   /**
    * Handle generic Stripe errors
    */
   handleStripeError(error: any): string {
-    switch (error.type) {
+    if (error && error.message) {
+      return error.message;
+    }
+    
+    switch (error?.type) {
       case 'card_error':
         return error.message;
       case 'validation_error':
@@ -270,84 +208,6 @@ export class StripeService {
         return 'Too many requests. Please try again later.';
       default:
         return 'An unexpected error occurred. Please try again.';
-    }
-  }
-
-  /**
-   * Format amount for Stripe (convert to cents)
-   */
-  formatAmountForStripe(amount: number): number {
-    return Math.round(amount * 100);
-  }
-
-  /**
-   * Format amount from Stripe (convert from cents)
-   */
-  formatAmountFromStripe(amount: number): number {
-    return amount / 100;
-  }
-
-  /**
-   * Validate card element
-   */
-  async validateCardElement(cardElement: any): Promise<{ valid: boolean; error?: string }> {
-    if (!cardElement) {
-      return { valid: false, error: 'Card element not found' };
-    }
-
-    // This would typically be handled by Stripe's real-time validation
-    // You can add additional custom validation here if needed
-    return { valid: true };
-  }
-
-  /**
-   * Get payment method types available
-   */
-  getAvailablePaymentMethods(): string[] {
-    return ['card']; // Add more payment methods as needed (apple_pay, google_pay, etc.)
-  }
-
-  /**
-   * Check if Apple Pay is available
-   */
-  async isApplePayAvailable(): Promise<boolean> {
-    if (!this.isStripeReady()) {
-      return false;
-    }
-
-    try {
-      const paymentRequest = this.stripe.paymentRequest({
-        country: 'US',
-        currency: 'usd',
-        total: { label: 'Test', amount: 100 }
-      });
-
-      const result = await paymentRequest.canMakePayment();
-      return result?.applePay === true;
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Check if Google Pay is available
-   */
-  async isGooglePayAvailable(): Promise<boolean> {
-    if (!this.isStripeReady()) {
-      return false;
-    }
-
-    try {
-      const paymentRequest = this.stripe.paymentRequest({
-        country: 'US',
-        currency: 'usd',
-        total: { label: 'Test', amount: 100 }
-      });
-
-      const result = await paymentRequest.canMakePayment();
-      return result?.googlePay === true;
-    } catch {
-      return false;
     }
   }
 

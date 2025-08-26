@@ -1,0 +1,6 @@
+@echo off
+echo Running Stripe Configuration Check...
+powershell -ExecutionPolicy Bypass -File "%~dp0stripe-config-check.ps1"
+echo.
+echo Press any key to exit...
+pause > nul

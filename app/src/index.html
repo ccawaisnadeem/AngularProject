@@ -6,16 +6,8 @@
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <!-- Content Security Policy for Stripe and hCaptcha -->
-  <meta http-equiv="Content-Security-Policy" content="
-    default-src 'self';
-    script-src 'self' https://js.stripe.com https://*.stripe.com https://*.stripe.network https://*.hcaptcha.com 'unsafe-inline' 'unsafe-eval';
-    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-    img-src 'self' data: https://*.stripe.com https://*.hcaptcha.com https://nominatim.openstreetmap.org;
-    connect-src 'self' https://api.stripe.com https://*.stripe.com https://*.hcaptcha.com https://nominatim.openstreetmap.org http://localhost:* https://localhost:*;
-    frame-src 'self' https://js.stripe.com https://*.stripe.com https://*.hcaptcha.com;
-    font-src 'self' https://fonts.gstatic.com;
-  ">
+  <!-- Updated Content Security Policy for Stripe -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://*.stripe.com https://*.stripe.network https://*.stripecdn.com https://*.hcaptcha.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https://*.stripe.com https://*.hcaptcha.com https://nominatim.openstreetmap.org; connect-src 'self' https://api.stripe.com https://*.stripe.com https://*.hcaptcha.com https://nominatim.openstreetmap.org http://localhost:* https://localhost:*; frame-src 'self' https://js.stripe.com https://*.stripe.com https://*.stripe.network https://*.stripecdn.com https://*.hcaptcha.com; font-src 'self' data: https://fonts.gstatic.com; worker-src blob:;">
 </head>
 <body>
   <app-root></app-root>

@@ -25,8 +25,10 @@ export const routes: Routes = [
             { path: 'inventory', component: Inventory, canActivate: [AuthGuard] },
             { path: 'cart', component: CartComponent, canActivate: [AuthGuard] },
             { path: 'checkout', component: CheckoutComponent, canActivate: [AuthGuard] },
-            { path: 'checkout/success', component: CheckoutSuccessComponent, canActivate: [AuthGuard] },
-            { path: 'checkout/cancel', component: CheckoutCancelComponent, canActivate: [AuthGuard] },
+            { path: 'checkout/stripe', loadComponent: () => import('./pages/checkout/stripcheckout').then(m => m.StripeCheckoutComponent), canActivate: [AuthGuard] },
+            // Remove AuthGuard from success/cancel routes to avoid redirection issues
+            { path: 'checkout/success', component: CheckoutSuccessComponent },
+            { path: 'checkout/cancel', component: CheckoutCancelComponent },
             { path: 'order-confirmation/:id', component: OrderConfirmationComponent, canActivate: [AuthGuard] },
             { path: 'orders', component: OrdersComponent, canActivate: [AuthGuard] },
             { path: 'order-tracking/:id', component: OrderTrackingComponent, canActivate: [AuthGuard] },

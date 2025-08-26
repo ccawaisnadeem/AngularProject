@@ -4,18 +4,16 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { RouterLink, Router } from '@angular/router';
 import { CartStateService } from '../../services/cart-state.service';
 import { NotificationService } from '../../services/notification.service';
-import { OrderService } from '../../services/order';
 import { ProductService, Product } from '../../services/product';
 import { AuthService } from '../../auth/services/auth.service';
-import { StripeService } from '../../services/StripeService'; // Add Stripe service
+import { StripeService } from '../../services/StripeService';
 import { CartItem } from '../../Models/Cart.Model';
 import { Subscription } from 'rxjs';
-import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-checkout',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   template: `
     <div class="checkout-page">
       <div class="container">
@@ -45,32 +43,20 @@ import { FormsModule } from '@angular/forms';
                   <div class="row">
                     <div class="col-md-6 mb-3">
                       <label for="firstName" class="form-label">First Name *</label>
-                      <input type="text" class="form-control" id="firstName" formControlName="firstName">
+                      <input type="text" class="form-control" id="firstName" formControlName="firstName"
+                             [class.is-invalid]="checkoutForm.get('firstName')?.invalid && checkoutForm.get('firstName')?.touched">
                     </div>
                     <div class="col-md-6 mb-3">
                       <label for="lastName" class="form-label">Last Name *</label>
-                      <input type="text" class="form-control" id="lastName" formControlName="lastName">
+                      <input type="text" class="form-control" id="lastName" formControlName="lastName"
+                             [class.is-invalid]="checkoutForm.get('lastName')?.invalid && checkoutForm.get('lastName')?.touched">
                     </div>
                   </div>
 
                   <div class="mb-3">
                     <label for="email" class="form-label">Email Address *</label>
-                    <input type="email" class="form-control" id="email" formControlName="email">
-                  </div>
-
-                  <div class="mb-3">
-                    <label for="phone" class="form-label">Phone Number *</label>
-                    <input type="tel" class="form-control" id="phone" formControlName="phone">
-                  </div>
-
-                  <div class="mb-3">
-                    <label for="address" class="form-label">Delivery Address *</label>
-                    <textarea 
-                      class="form-control" 
-                      id="address" 
-                      rows="3" 
-                      formControlName="address"
-                      placeholder="Enter your complete delivery address including street, city, state, and ZIP code"></textarea>
+                    <input type="email" class="form-control" id="email" formControlName="email"
+                           [class.is-invalid]="checkoutForm.get('email')?.invalid && checkoutForm.get('email')?.touched">
                   </div>
                 </form>
               </div>
@@ -82,16 +68,6 @@ import { FormsModule } from '@angular/forms';
                 <h5><i class="bi bi-credit-card-2-front me-2"></i>Payment Information</h5>
               </div>
               <div class="card-body">
-                <div class="payment-methods mb-3">
-                  <div class="form-check">
-                    <input class="form-check-input" type="radio" name="paymentMethod" id="stripe" value="stripe" 
-                           [(ngModel)]="selectedPaymentMethod" checked>
-                    <label class="form-check-label" for="stripe">
-                      <i class="bi bi-credit-card me-2"></i>Credit/Debit Card (Stripe)
-                    </label>
-                  </div>
-                </div>
-
                 <div class="alert alert-info" role="alert">
                   <i class="bi bi-info-circle me-2"></i>
                   You will be redirected to Stripe's secure payment page to complete your purchase.
@@ -106,13 +82,13 @@ import { FormsModule } from '@angular/forms';
               <button 
                 type="button" 
                 class="btn btn-primary btn-lg"
-                [disabled]="checkoutForm.invalid || isProcessing"
+                [disabled]="checkoutForm.invalid || isProcessing || cartState.items.length === 0"
                 (click)="processPayment()">
                 <span *ngIf="!isProcessing">
                   <i class="bi bi-lock me-2"></i>Pay {{ getTotalAmount() | currency }}
                 </span>
                 <span *ngIf="isProcessing">
-                  <i class="bi bi-hourglass-split me-2"></i>Processing Payment...
+                  <i class="bi bi-hourglass-split me-2"></i>Processing...
                 </span>
               </button>
             </div>
@@ -138,7 +114,7 @@ import { FormsModule } from '@angular/forms';
                   <span>{{ cartState.totalPrice | currency }}</span>
                 </div>
                 <div class="d-flex justify-content-between mb-2">
-                  <span>Tax and delivery charges (5%)</span>
+                  <span>Tax (5%)</span>
                   <span>{{ getTaxAmount() | currency }}</span>
                 </div>
                 <div class="d-flex justify-content-between mb-2">
@@ -171,11 +147,18 @@ import { FormsModule } from '@angular/forms';
       padding: 2rem 0;
     }
 
-    .payment-methods {
-      border: 1px solid #dee2e6;
-      border-radius: 0.375rem;
-      padding: 1rem;
-      background-color: #f8f9fa;
+    .card {
+      box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+      border: 1px solid rgba(0, 0, 0, 0.125);
+    }
+
+    .form-control.is-invalid {
+      border-color: #dc3545;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
   `]
 })
@@ -187,7 +170,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   isLoading = false;
   isProcessing = false;
   error: string | null = null;
-  selectedPaymentMethod = 'stripe';
   
   private subscription = new Subscription();
 
@@ -195,18 +177,15 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private cartStateService: CartStateService,
     private notificationService: NotificationService,
-    private orderService: OrderService,
     private productService: ProductService,
     private authService: AuthService,
-    private stripeService: StripeService, // Add Stripe service
+    private stripeService: StripeService,
     private router: Router
   ) {
     this.checkoutForm = this.fb.group({
       firstName: ['', [Validators.required]],
       lastName: ['', [Validators.required]],
-      email: ['', [Validators.required, Validators.email]],
-      phone: ['', [Validators.required]],
-      address: ['', [Validators.required]]
+      email: ['', [Validators.required, Validators.email]]
     });
   }
 
@@ -231,30 +210,29 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   private loadCurrentUser(): void {
-  this.subscription.add(
-    this.authService.currentUser.subscribe(user => {
-      this.currentUser = user;
-      if (user) {
-        // Split fullName into first + last name
-        let firstName = '';
-        let lastName = '';
+    this.subscription.add(
+      this.authService.currentUser.subscribe(user => {
+        this.currentUser = user;
+        if (user) {
+          // Split fullName into first + last name
+          let firstName = '';
+          let lastName = '';
 
-        if (user.fullName) {
-          const nameParts = user.fullName.trim().split(' ');
-          firstName = nameParts[0] || '';
-          lastName = nameParts.slice(1).join(' ') || ''; // handles middle names too
+          if (user.fullName) {
+            const nameParts = user.fullName.trim().split(' ');
+            firstName = nameParts[0] || '';
+            lastName = nameParts.slice(1).join(' ') || '';
+          }
+
+          this.checkoutForm.patchValue({
+            firstName: firstName,
+            lastName: lastName,
+            email: user.email || ''
+          });
         }
-
-        this.checkoutForm.patchValue({
-          firstName: firstName,
-          lastName: lastName,
-          email: user.email || '',
-          address: user.address || ''
-        });
-      }
-    })
-  );
-}
+      })
+    );
+  }
 
   private loadProducts(): void {
     this.productService.getProducts().subscribe(products => {
@@ -262,14 +240,18 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     });
   }
 
-  async processPayment(): Promise<void> {
+  processPayment(): void {
+    // Mark form as touched to show validation errors
+    this.markFormGroupTouched(this.checkoutForm);
+    
     if (this.checkoutForm.invalid) {
+      this.error = "Please fill in all required fields correctly.";
       return;
     }
 
     // Check if user is authenticated
     if (!this.currentUser) {
-      this.error = "You must be logged in to checkout. Please login and try again.";
+      this.error = "You must be logged in to checkout.";
       this.notificationService.error(
         'Authentication Required',
         'Please log in to continue with checkout.',
@@ -279,63 +261,56 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.isProcessing = true;
-    this.error = null;
+    // Check if cart has items
+    if (!this.cartState.items || this.cartState.items.length === 0) {
+      this.error = "Your cart is empty.";
+      return;
+    }
 
+    // Update the session storage with form data
     try {
-      // Prepare checkout data
-      const checkoutData = {
-        userId: this.currentUser?.id || 0,
-        cartId: this.cartState.cartId || this.currentUser?.id || 0,
-        customerEmail: this.checkoutForm.get('email')?.value,
-        lineItems: this.cartState.items.map((item: CartItem) => ({
-          name: this.getProductName(item.productId),
-          description: `Product ID: ${item.productId}`,
-          price: item.priceAtAdd,
-          quantity: item.quantity,
-          imageUrl: ''
-        }))
-      };
-
-      // Create checkout session using Stripe service
-      this.stripeService.createCheckoutSession(checkoutData).subscribe({
-        next: async (response) => {
-          // Redirect to Stripe Checkout using service
-          const result = await this.stripeService.redirectToCheckout(response.sessionId);
-          
-          if (result.error) {
-            this.handlePaymentError(result.error.message);
-          }
-        },
-        error: (error) => {
-          console.error('Error creating checkout session:', error);
-          this.handlePaymentError('Failed to initialize payment. Please try again.');
-        }
-      });
-
+      // Store checkout form data in session for stripe checkout to use
+      sessionStorage.setItem('checkoutFormData', JSON.stringify({
+        firstName: this.checkoutForm.get('firstName')?.value,
+        lastName: this.checkoutForm.get('lastName')?.value,
+        email: this.checkoutForm.get('email')?.value
+      }));
+      
+      // Navigate to stripe checkout component
+      this.isProcessing = true;
+      this.router.navigate(['/checkout/stripe']);
+      
     } catch (error) {
-      console.error('Payment processing error:', error);
-      this.handlePaymentError('An unexpected error occurred. Please try again.');
+      console.error('Error preparing checkout:', error);
+      this.error = 'Failed to prepare checkout. Please try again.';
+      this.isProcessing = false;
     }
   }
 
   private handlePaymentError(message: string): void {
     this.isProcessing = false;
-    this.error = this.stripeService.handleStripeError({ message }) || message;
+    this.error = message;
     this.notificationService.error(
       'Payment Failed',
-      this.error,
+      message,
       5000
     );
   }
 
+  private markFormGroupTouched(formGroup: FormGroup): void {
+    Object.keys(formGroup.controls).forEach(field => {
+      const control = formGroup.get(field);
+      control?.markAsTouched({ onlySelf: true });
+    });
+  }
+
   getProductName(productId: number): string {
     const product = this.products.find(p => p.id === productId);
-    return product?.title || 'Unknown Product';
+    return product?.title || `Product ${productId}`;
   }
 
   getTaxAmount(): number {
-    return this.cartState.totalPrice * 0.05; // 5% as per your template
+    return this.cartState.totalPrice * 0.05; // 5% tax
   }
 
   getShippingCost(): number {

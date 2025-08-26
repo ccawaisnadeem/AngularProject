@@ -33,6 +33,7 @@ import { Subscription } from 'rxjs';
           <button 
             class="navbar-toggler border-0 shadow-none" 
             type="button" 
+            style='background:Orange;'
             data-bs-toggle="collapse" 
             data-bs-target="#navbarContent" 
             aria-controls="navbarContent" 
@@ -112,19 +113,37 @@ import { Subscription } from 'rxjs';
                   }
                   <!-- Show these items when logged in -->
                   @if (authService.isAuthenticated()) {
-                    <li><a class="dropdown-item" href="#">My Profile</a></li>
-                    <li><a class="dropdown-item" href="#">Orders</a></li>
                     
+
+                    @if(!authService.isAdmin()){
+                     
+                       <li> <a class="nav-link text-black fw-medium" routerLink="/orders" aria-label="My orders">
+                              <i class="bi bi-list-ul fs-4" aria-hidden="true"></i>
+                             <span class="ms-1 d-none d-lg-inline">Orders</span>
+                          </a>
+                       </li>
+                       <li> 
+                          <a class="nav-link text-black fw-medium position-relative" routerLink="/cart" aria-label="Shopping cart">
+                             <i class="bi bi-cart3 fs-4" aria-hidden="true"></i>
+                            <span *ngIf="cartItemCount > 0" 
+                             class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger animate__animated animate__bounceIn" 
+                             aria-hidden="true">
+                             {{ cartItemCount }}
+                           </span>
+                           <span class="ms-1 d-none d-lg-inline">Cart</span>
+                          </a>
+                       </li>
+                    }
                     <!-- Admin Dashboard link (only for admins) -->
                    <!-- Exit Store Link (only visible to admins) -->
-                  @if (authService.isAdmin()) {
+                  
+                    @if (authService.isAdmin()) {
                       <li class="dropdown-item">
                        <a class="nav-link text-BLACK fw-medium py-2 px-3" routerLink="/admin/dashboard" aria-label="Return to admin dashboard">
                             <i class="bi bi-speedometer2 me-1" aria-hidden="true"></i>Exit Store
                        </a>
                      </li>
-            }
-                    
+                   }
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" href="#" (click)="authService.logout()">Sign Out</a></li>
                   }
@@ -142,13 +161,7 @@ import { Subscription } from 'rxjs';
               }
 
               <!-- Orders -->
-              <li class="nav-item me-3">
-                <a class="nav-link text-light fw-medium" href="#" aria-label="View your orders">
-                  <i class="bi bi-box-seam me-1 fs-5" aria-hidden="true"></i>
-                  <span class="d-none d-lg-inline">Orders</span>
-                  <span class="d-lg-none">Orders</span>
-                </a>
-              </li>
+              
 
               <!-- Cart -->
               <li class="nav-item">

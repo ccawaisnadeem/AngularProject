@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { OrderService, Order } from '../../services/order';
+import { OrderService, Order, OrderStatus, PaymentStatus, ShipmentStatus } from '../../services/order';
 import { ProductService, Product } from '../../services/product';
 import { NotificationService } from '../../services/notification.service';
 
@@ -30,7 +30,7 @@ import { NotificationService } from '../../services/notification.service';
           <i class="bi bi-inbox display-1 text-muted mb-3"></i>
           <h3 class="text-muted">No Orders Yet</h3>
           <p class="text-muted mb-4">Start shopping to see your orders here</p>
-          <a routerLink="/inventory" class="btn btn-primary">Start Shopping</a>
+          <a routerLink="/home" class="btn btn-primary">Shop Now</a>
         </div>
 
         <div *ngIf="!isLoading && !error && orders.length > 0" class="row">
@@ -42,11 +42,11 @@ import { NotificationService } from '../../services/notification.service';
                     <h6 class="mb-0">
                       <i class="bi bi-receipt me-2"></i>Order #{{ order.id }}
                     </h6>
-                    <small class="text-muted">{{ order.orderDate | date:'medium' }}</small>
+                    <small class="text-muted">{{ order.createdAt | date:'medium' }}</small>
                   </div>
                   <div class="col-md-6 text-end">
-                    <span class="badge bg-primary me-2">{{ order.status }}</span>
-                    <span class="badge bg-success">{{ order.paymentStatus }}</span>
+                    <span class="badge" [ngClass]="getOrderStatusClass(order.orderStatus)">{{ getOrderStatusText(order.orderStatus) }}</span>
+                    <span class="badge" [ngClass]="getPaymentStatusClass(order.paymentStatus)">{{ getPaymentStatusText(order.paymentStatus) }}</span>
                   </div>
                 </div>
               </div>
@@ -119,25 +119,37 @@ export class OrdersComponent implements OnInit {
     });
   }
 
-  private loadOrders(): void {
-    this.isLoading = true;
-    this.orderService.getUserOrders().subscribe({
-      next: (orders) => {
-        this.orders = orders;
+ private loadOrders(): void {
+  this.isLoading = true;
+  this.error = null; // Clear any previous errors
+  
+  this.orderService.getCurrentUserOrders().subscribe({
+    next: (orders) => {
+      this.orders = orders || []; // Ensure orders is never null
+      this.isLoading = false;
+    },
+    error: (error) => {
+      console.error('Error loading orders:', error);
+      
+      // If it's a 404 (no orders found) or user has no orders, just show empty state
+      if (error.status === 404 || error.message?.includes('no orders')) {
+        console.log('No orders found for user, showing empty state');
+        this.orders = [];
         this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error loading orders:', error);
+        // Don't set error - just show empty orders state
+      } else {
+        // Only show error for actual system errors
         this.error = 'Failed to load orders';
         this.isLoading = false;
         this.notificationService.error(
           'Error',
-          'Failed to load orders',
+          'Failed to load orders. Please try again.',
           5000
         );
       }
-    });
-  }
+    }
+  });
+}
 
   getProductName(productId: number): string {
     const product = this.products.find(p => p.id === productId);
@@ -147,5 +159,47 @@ export class OrdersComponent implements OnInit {
   getProductImage(productId: number): string {
     const product = this.products.find(p => p.id === productId);
     return product?.image || 'https://via.placeholder.com/60x60';
+  }
+
+  getOrderStatusText(status?: OrderStatus): string {
+    switch (status) {
+      case OrderStatus.Pending: return 'Pending';
+      case OrderStatus.Confirmed: return 'Confirmed';
+      case OrderStatus.Shipped: return 'Shipped';
+      case OrderStatus.Delivered: return 'Delivered';
+      case OrderStatus.Cancelled: return 'Cancelled';
+      default: return 'Unknown';
+    }
+  }
+
+  getOrderStatusClass(status?: OrderStatus): string {
+    switch (status) {
+      case OrderStatus.Pending: return 'bg-warning';
+      case OrderStatus.Confirmed: return 'bg-info';
+      case OrderStatus.Shipped: return 'bg-primary';
+      case OrderStatus.Delivered: return 'bg-success';
+      case OrderStatus.Cancelled: return 'bg-danger';
+      default: return 'bg-secondary';
+    }
+  }
+
+  getPaymentStatusText(status?: PaymentStatus): string {
+    switch (status) {
+      case PaymentStatus.Pending: return 'Pending';
+      case PaymentStatus.Paid: return 'Paid';
+      case PaymentStatus.Failed: return 'Failed';
+      case PaymentStatus.Refunded: return 'Refunded';
+      default: return 'Unknown';
+    }
+  }
+
+  getPaymentStatusClass(status?: PaymentStatus): string {
+    switch (status) {
+      case PaymentStatus.Pending: return 'bg-warning';
+      case PaymentStatus.Paid: return 'bg-success';
+      case PaymentStatus.Failed: return 'bg-danger';
+      case PaymentStatus.Refunded: return 'bg-info';
+      default: return 'bg-secondary';
+    }
   }
 }

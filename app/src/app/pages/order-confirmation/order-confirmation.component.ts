@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
-import { OrderService, Order } from '../../services/order';
+import { OrderService, Order, OrderStatus, PaymentStatus } from '../../services/order';
 import { ProductService, Product } from '../../services/product';
 import { NotificationService } from '../../services/notification.service';
 
@@ -40,17 +40,17 @@ import { NotificationService } from '../../services/notification.service';
                     <strong>Order ID:</strong> #{{ order.id }}
                   </div>
                   <div class="col-md-6">
-                    <strong>Order Date:</strong> {{ order.orderDate | date:'medium' }}
+                    <strong>Order Date:</strong> {{ order.createdAt | date:'medium' }}
                   </div>
                 </div>
                 <div class="row mb-3">
                   <div class="col-md-6">
                     <strong>Status:</strong> 
-                    <span class="badge bg-primary">{{ order.status }}</span>
+                    <span class="badge bg-warning">{{ getOrderStatusText(order.orderStatus) }}</span>
                   </div>
                   <div class="col-md-6">
                     <strong>Payment Status:</strong> 
-                    <span class="badge bg-success">{{ order.paymentStatus }}</span>
+                    <span class="badge bg-success">{{ getPaymentStatusText(order.paymentStatus) }}</span>
                   </div>
                 </div>
 
@@ -86,12 +86,12 @@ import { NotificationService } from '../../services/notification.service';
                 <div class="mb-3">
                   <i class="bi bi-envelope text-primary me-2"></i>
                   <strong>Email Confirmation</strong>
-                  <p class="small text-muted">You'll receive an email confirmation shortly.</p>
+                  <p class="small text-muted">You'll receive an Order confirmation shortly.</p>
                 </div>
                 <div class="mb-3">
                   <i class="bi bi-truck text-primary me-2"></i>
                   <strong>Shipping Updates</strong>
-                  <p class="small text-muted">Track your order status in your account.</p>
+                  <p class="small text-muted">Track your Order status in your account.</p>
                 </div>
                 <div class="mb-3">
                   <i class="bi bi-headset text-primary me-2"></i>
@@ -103,13 +103,13 @@ import { NotificationService } from '../../services/notification.service';
 
                          <div class="card mt-3">
                <div class="card-body text-center">
-                 <a routerLink="/inventory" class="btn btn-primary me-2">
+                 <a routerLink="/inventory" class="btn btn-warning me-2">
                    <i class="bi bi-shop me-2"></i>Continue Shopping
                  </a>
-                 <a [routerLink]="['/order-tracking', order.id]" class="btn btn-outline-primary me-2">
+                 <a [routerLink]="['/order-tracking', order.id]" class="btn btn-outline-warning me-2">
                    <i class="bi bi-truck me-2"></i>Track Order
                  </a>
-                 <a routerLink="/orders" class="btn btn-outline-secondary">
+                 <a routerLink="/orders" class="btn btn-outline-warning">
                    <i class="bi bi-list-ul me-2"></i>View Orders
                  </a>
                </div>
@@ -189,5 +189,40 @@ export class OrderConfirmationComponent implements OnInit {
   getProductImage(productId: number): string {
     const product = this.products.find(p => p.id === productId);
     return product?.image || 'https://via.placeholder.com/60x60';
+  }
+
+  // Helper methods for enum text display
+  getOrderStatusText(status: OrderStatus | undefined): string {
+    if (status === undefined || status === null) return 'Unknown';
+    switch (status) {
+      case OrderStatus.Pending:
+        return 'Pending';
+      case OrderStatus.Confirmed:
+        return 'Confirmed';
+      case OrderStatus.Shipped:
+        return 'Shipped';
+      case OrderStatus.Delivered:
+        return 'Delivered';
+      case OrderStatus.Cancelled:
+        return 'Cancelled';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  getPaymentStatusText(status: PaymentStatus | undefined): string {
+    if (status === undefined || status === null) return 'Unknown';
+    switch (status) {
+      case PaymentStatus.Pending:
+        return 'Pending';
+      case PaymentStatus.Paid:
+        return 'Paid';
+      case PaymentStatus.Failed:
+        return 'Failed';
+      case PaymentStatus.Refunded:
+        return 'Refunded';
+      default:
+        return 'Unknown';
+    }
   }
 }
