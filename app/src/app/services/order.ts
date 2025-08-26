@@ -4,9 +4,27 @@ import { Observable, catchError, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface OrderItem {
+  id?: number;
+  orderId?: number;
   productId: number;
   quantity: number;
   priceAtPurchase: number;
+}
+
+export interface UserSummary {
+  id: number;
+  name: string;
+  email: string;
+}
+
+export interface Shipment {
+  id?: number;
+  orderId?: number;
+  status?: ShipmentStatus;
+  trackingNumber?: string;
+  courierName?: string;
+  shipmentDate?: string;
+  deliveredAt?: string;
 }
 
 export enum OrderStatus {
@@ -34,20 +52,13 @@ export enum ShipmentStatus {
 export interface Order {
   id?: number;
   userId?: number;
+  user?: UserSummary;
   orderStatus?: OrderStatus;
   paymentStatus?: PaymentStatus;
   totalAmount: number;
   createdAt?: string;
   orderItems: OrderItem[];
-  shipment?: {
-    id?: number;
-    orderId?: number;
-    trackingNumber?: string;
-    courierName?: string;
-    shipmentDate?: string;
-    deliveryDate?: string;
-    status?: ShipmentStatus;
-  };
+  shipment?: Shipment;
 }
 
 @Injectable({

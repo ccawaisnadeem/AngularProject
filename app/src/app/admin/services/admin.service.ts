@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { catchError, delay, map } from 'rxjs/operators';
+import { catchError, delay, map, switchMap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { User } from '../../auth/models/user.model';
 import { OrderService } from '../../services/order';
@@ -43,36 +43,40 @@ export class AdminService {
     }).pipe(delay(500)); // Simulate API delay
   }
   
-  // Get orders for order management
+  // Get orders for order management (Admin - gets all orders)
   getOrders(): Observable<any[]> {
-  return this.http.get<any[]>(`${this.API_URL}/Order`)
-    .pipe(
-      catchError(error => {
-        console.error('Error fetching orders:', error);
-        return of([]);
-      })
-    );
- }
-
-  getOrderById(id: number): Observable<any> {
-   return this.http.get<any>(`${this.API_URL}/Order/${id}`)
-    .pipe(
-      catchError(error => {
-        console.error(`Error fetching order ${id}:`, error);
-        throw error;
-      })
-    );
+    return this.http.get<any[]>(`${this.API_URL}/Order`)
+      .pipe(
+        catchError(error => {
+          console.error('Error fetching orders:', error);
+          return of([]);
+        })
+      );
   }
 
- updateOrderStatus(id: number, status: string): Observable<any> {
-   return this.http.put<any>(`${this.API_URL}/Order/${id}/status`, { status })
-    .pipe(
-      catchError(error => {
-        console.error(`Error updating order ${id} status:`, error);
-        throw error;
-      })
-    );
- }
+  getOrderById(id: number): Observable<any> {
+    return this.http.get<any>(`${this.API_URL}/Order/${id}`)
+      .pipe(
+        catchError(error => {
+          console.error(`Error fetching order ${id}:`, error);
+          throw error;
+        })
+      );
+  }
+
+  // Update order status with both order and payment status
+  updateOrderStatus(id: number, orderStatus: number, paymentStatus: number): Observable<any> {
+    return this.http.put<any>(`${this.API_URL}/Order/${id}/status`, { 
+      orderStatus: orderStatus,
+      paymentStatus: paymentStatus 
+    })
+      .pipe(
+        catchError(error => {
+          console.error(`Error updating order ${id} status:`, error);
+          throw error;
+        })
+      );
+  }
 
   
   // User Management Methods
@@ -180,6 +184,36 @@ export class AdminService {
       })
     );
  }
+
+  // Update payment status separately (will need to fetch current order status)
+  updatePaymentStatus(orderId: number, paymentStatus: number): Observable<any> {
+    // First get the current order to preserve order status
+    return this.getOrderById(orderId).pipe(
+      switchMap((order: any) => {
+        // Use the existing updateOrderStatus method with current order status
+        return this.updateOrderStatus(orderId, order.orderStatus, paymentStatus);
+      }),
+      catchError(error => {
+        console.error(`Error updating order ${orderId} payment status:`, error);
+        throw error;
+      })
+    );
+  }
+
+  // Update only order status (will need to fetch current payment status)
+  updateOrderStatusOnly(orderId: number, orderStatus: number): Observable<any> {
+    // First get the current order to preserve payment status
+    return this.getOrderById(orderId).pipe(
+      switchMap((order: any) => {
+        // Use the existing updateOrderStatus method with current payment status
+        return this.updateOrderStatus(orderId, orderStatus, order.paymentStatus);
+      }),
+      catchError(error => {
+        console.error(`Error updating order ${orderId} order status:`, error);
+        throw error;
+      })
+    );
+  }
 
   getShipmentByOrder(orderId: number): Observable<any> {
     return this.http.get<any>(`${this.API_URL}/Shipment/order/${orderId}`)
