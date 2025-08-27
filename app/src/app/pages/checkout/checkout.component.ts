@@ -68,7 +68,7 @@ import { Subscription } from 'rxjs';
                 <h5><i class="bi bi-credit-card-2-front me-2"></i>Payment Information</h5>
               </div>
               <div class="card-body">
-                <div class="alert alert-info" role="alert">
+                <div class="alert alert-warning" role="alert">
                   <i class="bi bi-info-circle me-2"></i>
                   You will be redirected to Stripe's secure payment page to complete your purchase.
                 </div>
@@ -76,12 +76,12 @@ import { Subscription } from 'rxjs';
             </div>
 
             <div class="d-flex justify-content-between mt-4">
-              <a routerLink="/cart" class="btn btn-outline-secondary">
+              <a routerLink="/cart" class="btn btn-outline-warning" style="color:white">
                 <i class="bi bi-arrow-left me-2"></i>Back to Cart
               </a>
-              <button 
+              <button style="color:white"
                 type="button" 
-                class="btn btn-primary btn-lg"
+                class="btn btn-warning btn-lg"
                 [disabled]="checkoutForm.invalid || isProcessing || cartState.items.length === 0"
                 (click)="processPayment()">
                 <span *ngIf="!isProcessing">
@@ -96,7 +96,7 @@ import { Subscription } from 'rxjs';
 
           <div class="col-lg-4">
             <div class="card sticky-top" style="top: 20px;">
-              <div class="card-header bg-primary text-white">
+              <div class="card-header bg-warning text-white">
                 <h5><i class="bi bi-receipt me-2"></i>Order Summary</h5>
               </div>
               <div class="card-body">
@@ -114,13 +114,10 @@ import { Subscription } from 'rxjs';
                   <span>{{ cartState.totalPrice | currency }}</span>
                 </div>
                 <div class="d-flex justify-content-between mb-2">
-                  <span>Tax (5%)</span>
+                  <span>Tax and shipping charges (10%)</span>
                   <span>{{ getTaxAmount() | currency }}</span>
                 </div>
-                <div class="d-flex justify-content-between mb-2">
-                  <span>Shipping</span>
-                  <span>{{ getShippingCost() | currency }}</span>
-                </div>
+                
                 <hr>
                 <div class="d-flex justify-content-between mb-3">
                   <span class="fw-bold fs-5">Total</span>
@@ -240,7 +237,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     });
   }
 
-  processPayment(): void {
+  async processPayment(): Promise<void> {
     // Mark form as touched to show validation errors
     this.markFormGroupTouched(this.checkoutForm);
     
@@ -267,23 +264,96 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Update the session storage with form data
+    this.isProcessing = true;
+    this.error = null;
+
     try {
-      // Store checkout form data in session for stripe checkout to use
-      sessionStorage.setItem('checkoutFormData', JSON.stringify({
-        firstName: this.checkoutForm.get('firstName')?.value,
-        lastName: this.checkoutForm.get('lastName')?.value,
-        email: this.checkoutForm.get('email')?.value
-      }));
+      // Prepare checkout data that exactly matches backend expectations
+      const checkoutData = {
+        userId: this.currentUser?.id || 0,
+        cartId: this.cartState.cartId || this.currentUser?.id || 0,
+        customerEmail: this.checkoutForm.get('email')?.value || '',
+        lineItems: this.cartState.items.map((item: CartItem) => ({
+          name: this.getProductName(item.productId) || 'Product',
+          description: `Product ID: ${item.productId}`,
+          price: item.priceAtAdd > 0 ? item.priceAtAdd : 0.01, // Ensure price is positive
+          quantity: item.quantity > 0 ? item.quantity : 1, // Ensure quantity is positive
+          imageUrl: null // Using null instead of empty string as it's not a valid URL
+        }))
+      };
       
-      // Navigate to stripe checkout component
-      this.isProcessing = true;
-      this.router.navigate(['/checkout/stripe']);
+      // Validate the data matches the backend expectations
+      if (!checkoutData.lineItems.length) {
+        this.handlePaymentError('No items in cart to checkout');
+        return;
+      }
       
+      // Ensure email is valid
+      if (!checkoutData.customerEmail || !checkoutData.customerEmail.includes('@')) {
+        this.handlePaymentError('Please provide a valid email address');
+        this.error = 'Please provide a valid email address';
+        return;
+      }
+
+      console.log('Sending checkout data:', checkoutData);
+
+      // Check authentication status before proceeding
+      if (!this.authService.getToken()) {
+        this.handlePaymentError('Authentication token not found. Please log in again.');
+        this.router.navigate(['/auth/login'], { queryParams: { returnUrl: '/checkout' } });
+        return;
+      }
+
+      // Create checkout session using Stripe service with proper error handling
+      this.stripeService.createCheckoutSession(checkoutData).subscribe({
+        next: async (response) => {
+          if (!response || !response.sessionId) {
+            this.handlePaymentError('Invalid response from payment service.');
+            return;
+          }
+          
+          console.log('Checkout session created:', response);
+          
+          // Redirect to Stripe Checkout
+          try {
+            const result = await this.stripeService.redirectToCheckout(response.sessionId);
+            
+            if (result.error) {
+              this.handlePaymentError(result.error.message || 'Failed to redirect to payment.');
+            }
+          } catch (redirectError) {
+            console.error('Redirect error:', redirectError);
+            this.handlePaymentError('Failed to open payment page. Please try again.');
+          }
+        },
+        error: (error) => {
+          console.error('Error creating checkout session:', error);
+          let errorMessage = 'Failed to initialize payment. Please try again.';
+          
+          // Handle specific error types
+          if (error.status === 401) {
+            errorMessage = 'Authentication failed. Please log in again.';
+            this.authService.logout();
+            this.router.navigate(['/auth/login']);
+          } else if (error.status === 400) {
+            errorMessage = error.error?.error || 'Invalid request data. Please check your information.';
+          } else if (error.status === 500) {
+            errorMessage = 'Server error. Please try again later.';
+          }
+          
+          if (error.error && error.error.error) {
+            errorMessage = error.error.error;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+          
+          this.handlePaymentError(errorMessage);
+        }
+      });
+
     } catch (error) {
-      console.error('Error preparing checkout:', error);
-      this.error = 'Failed to prepare checkout. Please try again.';
-      this.isProcessing = false;
+      console.error('Payment processing error:', error);
+      this.handlePaymentError('An unexpected error occurred. Please try again.');
     }
   }
 
@@ -310,14 +380,14 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   getTaxAmount(): number {
-    return this.cartState.totalPrice * 0.05; // 5% tax
+    return this.cartState.totalPrice * 0.10; // 10% tax
   }
 
   getShippingCost(): number {
-    return this.cartState.totalPrice > 50 ? 0 : 5.99;
+    return 0;
   }
 
   getTotalAmount(): number {
-    return this.cartState.totalPrice + this.getTaxAmount() + this.getShippingCost();
+    return this.cartState.totalPrice  + this.getTaxAmount();
   }
 }

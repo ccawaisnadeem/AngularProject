@@ -1,6 +1,6 @@
+<!-- Updated product-list.component.html -->
 <div class="container-fluid px-3 py-3">
-  
-
+ 
   <!-- Loading state -->
   <div *ngIf="loading" class="loading text-center py-4">
     <div class="spinner-border text-primary" role="status">
@@ -8,44 +8,75 @@
     </div>
     <p class="mt-2">Loading products...</p>
   </div>
-  
+ 
   <!-- Products grid - Amazon style -->
   <div class="products-container row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3" *ngIf="!loading">
     <div class="col" *ngFor="let product of products">
-      <div class="product-card">
+      <div class="product-card" (click)="openProductDetail(product)">
         <!-- Product image container -->
         <div class="image-container">
           <img [src]="product.image" [alt]="product.title">
         </div>
-        
+       
         <!-- Product details -->
         <div class="product-info">
           <h3 class="product-title">{{ product.title }}</h3>
-          
+         
           <!-- Price display -->
           <div class="price-display">
             <span class="currency">$</span>
             <span class="amount">{{ product.price | number:'1.0-0' }}</span>
             <span class="cents">{{ (product.price % 1 > 0 ? (product.price % 1).toFixed(2).substring(1) : '.00') }}</span>
           </div>
-          
+         
           <!-- Description -->
           <p class="description">{{ product.description | slice:0:70 }}...</p>
-          
+         
+          <!-- Stock indicator -->
+          <div class="stock-indicator">
+            <span class="stock-text" 
+                  [class.in-stock]="product.stock > 10"
+                  [class.low-stock]="product.stock <= 10 && product.stock > 0"
+                  [class.out-of-stock]="product.stock === 0">
+              <i class="bi" 
+                 [class.bi-check-circle-fill]="product.stock > 10"
+                 [class.bi-exclamation-triangle-fill]="product.stock <= 10 && product.stock > 0"
+                 [class.bi-x-circle-fill]="product.stock === 0"></i>
+              {{ product.stock > 10 ? 'In Stock' : 
+                 product.stock > 0 ? 'Only ' + product.stock + ' left' : 'Out of Stock' }}
+            </span>
+          </div>
+         
           <!-- Add to cart button -->
-          <button class="add-to-cart" 
-                  (click)="addToCart(product)"
-                  [disabled]="addingToCart[product.id!]"
-                  [class.in-cart]="isInCart(product.id!)">
-            <span *ngIf="!addingToCart[product.id!]">
-              <i class="bi bi-cart-plus me-1"></i>
-              {{ isInCart(product.id!) ? 'In Cart (' + getCartItemQuantity(product.id!) + ')' : 'Add to Cart' }}
-            </span>
-            <span *ngIf="addingToCart[product.id!]">
-              <i class="bi bi-hourglass-split me-1"></i>
-              Adding...
-            </span>
-          </button>
+          <div class="button-container" (click)="$event.stopPropagation()">
+            <!-- Add to Cart button - shows when product is not in cart -->
+            <button *ngIf="!isInCart(product.id!)"
+                    class="add-to-cart"
+                    (click)="addToCart(product)"
+                    [disabled]="addingToCart[product.id!] || product.stock === 0">
+              <span *ngIf="!addingToCart[product.id!]">
+                <i class="bi bi-cart-plus me-1"></i>
+                {{ product.stock === 0 ? 'Out of Stock' : 'Add to Cart' }}
+              </span>
+              <span *ngIf="addingToCart[product.id!]">
+                <i class="bi bi-hourglass-split me-1"></i>
+                Adding...
+              </span>
+            </button>
+           
+            <!-- When product is in cart, show View button -->
+            <div *ngIf="isInCart(product.id!)" class="d-flex flex-row gap-2">
+              <!-- View in Cart button (Green) -->
+              <button class="view-in-cart justify-content-center"
+                      (click)="viewCart()">
+                <i class="bi bi-cart me-1"></i>
+                View in Cart ({{ getCartItemQuantity(product.id!) }})
+              </button>
+            </div>
+            
+            <!-- View Details button -->
+            
+          </div>
         </div>
       </div>
     </div>

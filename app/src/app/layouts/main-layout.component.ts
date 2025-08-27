@@ -130,7 +130,8 @@ import { Subscription } from 'rxjs';
                              aria-hidden="true">
                              {{ cartItemCount }}
                            </span>
-                           <span class="ms-1 d-none d-lg-inline">Cart</span>
+                           <span class="ms-1 d-none d-lg-inline">
+</span>
                           </a>
                        </li>
                     }
@@ -161,7 +162,12 @@ import { Subscription } from 'rxjs';
               }
 
               <!-- Orders -->
-              
+               <li class="nav-item">
+                <a class="nav-link text-light fw-medium" routerLink="/orders" aria-label="My orders">
+                  <i class="bi bi-list-ul fs-4" aria-hidden="true"></i>
+                  <span class="ms-1 d-none d-lg-inline">Orders</span>
+                </a>
+              </li>
 
               <!-- Cart -->
               <li class="nav-item">
@@ -172,17 +178,16 @@ import { Subscription } from 'rxjs';
                         aria-hidden="true">
                     {{ cartItemCount }}
                   </span>
-                  <span class="ms-1 d-none d-lg-inline">Cart</span>
+                  <svg width="32" height="32" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <path d="M8 8H14L18 40H50L56 20H20" stroke="#FFC107" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="24" cy="52" r="4" fill="#FFC107"/>
+  <circle cx="46" cy="52" r="4" fill="#FFC107"/>
+</svg>
                 </a>
               </li>
               
               <!-- Orders -->
-              <li class="nav-item">
-                <a class="nav-link text-light fw-medium" routerLink="/orders" aria-label="My orders">
-                  <i class="bi bi-list-ul fs-4" aria-hidden="true"></i>
-                  <span class="ms-1 d-none d-lg-inline">Orders</span>
-                </a>
-              </li>
+             
             </ul>
           </div>
         </div>
@@ -229,6 +234,7 @@ import { Subscription } from 'rxjs';
 
       <!-- Toast Notifications -->
       <app-toast-notification></app-toast-notification>
+      
       
       <!-- Footer -->
       <footer class="bg-dark text-light py-4 mt-auto">

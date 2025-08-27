@@ -108,11 +108,11 @@ import { ProductService, Product } from '../../../services/product';
                   <td>
                     <div class="btn-group">
                       <button class="btn btn-sm btn-outline-primary" (click)="editProduct(product)">
-                        <i class="bi bi-pencil"></i>
+                        Edit<i class="bi bi-pencil"></i>
                       </button>
                       <button class="btn btn-sm btn-outline-danger" (click)="deleteProduct(product.id)">
                         <i class="bi bi-trash"></i>
-                      </button>
+                     Delete </button>
                     </div>
                   </td>
                 </tr>
@@ -131,38 +131,49 @@ import { ProductService, Product } from '../../../services/product';
         </div>
         
         <!-- Pagination -->
-        <div class="card-footer">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, totalProducts) }} of {{ totalProducts }} entries</div>
-            <nav *ngIf="totalPages > 1">
-              <ul class="pagination mb-0">
-                <li class="page-item" [ngClass]="{ 'disabled': currentPage === 1 }">
-                  <a class="page-link" href="#" (click)="$event.preventDefault(); changePage(currentPage - 1)" aria-label="Previous">
-                    Previous
-                  </a>
-                </li>
-                <li class="page-item" *ngFor="let page of getPageNumbers()" [ngClass]="{ 'active': currentPage === page }">
-                  <a class="page-link" href="#" (click)="$event.preventDefault(); changePage(page)">{{ page }}</a>
-                </li>
-                <li class="page-item" [ngClass]="{ 'disabled': currentPage === totalPages }">
-                  <a class="page-link" href="#" (click)="$event.preventDefault(); changePage(currentPage + 1)" aria-label="Next">
-                    Next
-                  </a>
-                </li>
-              </ul>
-            </nav>
-          </div>
-        </div>
+    <div class="card-footer">
+       <div class="d-flex justify-content-between align-items-center">
+      <div>
+      Showing {{ (currentPage - 1) * pageSize + 1 }} to 
+      {{ Math.min(currentPage * pageSize, totalProducts) }} 
+      of {{ totalProducts }} entries
       </div>
+    <nav *ngIf="totalPages > 1">
+      <ul class="pagination mb-0">
+        <li class="page-item" [ngClass]="{ 'disabled': currentPage === 1 }">
+          <a class="page-link page-link-warning" href="#" 
+             (click)="$event.preventDefault(); changePage(currentPage - 1)" 
+             aria-label="Previous">
+            Previous
+          </a>
+        </li>
+        <li class="page-item" *ngFor="let page of getPageNumbers()" 
+            [ngClass]="{ 'active': currentPage === page }">
+          <a class="page-link page-link-warning" href="#" 
+             (click)="$event.preventDefault(); changePage(page)">
+            {{ page }}
+          </a>
+        </li>
+        <li class="page-item" [ngClass]="{ 'disabled': currentPage === totalPages }">
+          <a class="page-link page-link-warning" href="#" 
+             (click)="$event.preventDefault(); changePage(currentPage + 1)" 
+             aria-label="Next">
+            Next
+           </a>
+         </li>
+       </ul>
+      </nav>
     </div>
+   </div>
+  </div>
     
     <!-- Add Product Modal -->
     <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="addProductModalLabel">Add New Product</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <h5 class="modal-title" id="addProductModalLabel">{{ isEditMode ? 'Edit Product' : 'Add New Product' }}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" (click)="resetForm()"></button>
           </div>
           <div class="modal-body">
             <form [formGroup]="productForm">
@@ -219,8 +230,10 @@ import { ProductService, Product } from '../../../services/product';
             </form>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-warning text-white" [disabled]="productForm.invalid" (click)="saveProduct()">Save Product</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" (click)="resetForm()">Cancel</button>
+            <button type="button" class="btn btn-warning text-white" [disabled]="productForm.invalid" (click)="saveProduct()">
+              {{ isEditMode ? 'Update Product' : 'Save Product' }}
+            </button>
           </div>
         </div>
       </div>
@@ -238,7 +251,33 @@ import { ProductService, Product } from '../../../services/product';
         </div>
       </div>
     </div>
-  `
+  `,
+  styles: `
+  .page-link-warning {
+  color: #ffc107; /* Bootstrap warning color */
+  }
+
+/* Hover effect */
+.page-link-warning:hover {
+  color: #fff;
+  background-color: #ffc107;
+  border-color: #ffc107;
+}
+
+/* Active page */
+.page-item.active .page-link-warning {
+  color: #fff;
+  background-color: #ffc107;
+  border-color: #ffc107;
+}
+
+/* Disabled */
+.page-item.disabled .page-link-warning {
+  color: #6c757d;
+  background-color: transparent;
+  border-color: #dee2e6;
+}
+`
 })
 export class AdminInventoryComponent implements OnInit {
   // Products array
@@ -255,6 +294,8 @@ export class AdminInventoryComponent implements OnInit {
   productForm: FormGroup;
   showToast = false;
   toastMessage = '';
+  isEditMode = false;
+  editingProductId: number | null = null;
   
   // Pagination
   currentPage = 1;
@@ -307,31 +348,71 @@ export class AdminInventoryComponent implements OnInit {
       return;
     }
     
-    const newProduct = this.productForm.value as Product;
+    const productData = this.productForm.value as Product;
     
-    this.productService.createProduct(newProduct).subscribe({
-      next: (product) => {
-        this.products.unshift(product);
-        this.applyFilters(); // Re-apply filters to update filteredProducts
-        
-        // Reset form and close modal
-        this.productForm.reset({ price: 0, stock: 0 });
-        const closeButton = document.getElementById('addProductModal')?.querySelector('.btn-close') as HTMLElement;
-        closeButton?.click();
-        
-        // Show success toast
-        this.showSuccessToast('Product added successfully');
-      },
-      error: (err) => {
-        console.error('Error creating product:', err);
-        this.showSuccessToast('Error adding product');
-      }
-    });
+    if (this.isEditMode && this.editingProductId) {
+      // Update existing product
+      this.productService.updateProduct(this.editingProductId, productData).subscribe({
+        next: () => {
+          // Find and update the product in the array
+          const index = this.products.findIndex(p => p.id === this.editingProductId);
+          if (index !== -1) {
+            this.products[index] = { ...this.products[index], ...productData };
+          }
+          this.applyFilters(); // Re-apply filters to update filteredProducts
+          
+          this.resetForm();
+          this.closeModal();
+          
+          // Show success toast
+          this.showSuccessToast('Product updated successfully');
+        },
+        error: (err) => {
+          console.error('Error updating product:', err);
+          this.showSuccessToast('Error updating product');
+        }
+      });
+    } else {
+      // Create new product
+      this.productService.createProduct(productData).subscribe({
+        next: (product) => {
+          this.products.unshift(product);
+          this.applyFilters(); // Re-apply filters to update filteredProducts
+          
+          this.resetForm();
+          this.closeModal();
+          
+          // Show success toast
+          this.showSuccessToast('Product added successfully');
+        },
+        error: (err) => {
+          console.error('Error creating product:', err);
+          this.showSuccessToast('Error adding product');
+        }
+      });
+    }
   }
   
   editProduct(product: Product): void {
-    // Populate form with product data for editing (to be implemented)
-    console.log('Edit product:', product);
+    this.isEditMode = true;
+    this.editingProductId = product.id || null;
+    
+    // Populate form with product data
+    this.productForm.patchValue({
+      title: product.title,
+      price: product.price,
+      description: product.description,
+      category: product.category,
+      image: product.image,
+      stock: product.stock
+    });
+    
+    // Open the modal
+    const modal = document.getElementById('addProductModal');
+    if (modal) {
+      const bootstrapModal = new (window as any).bootstrap.Modal(modal);
+      bootstrapModal.show();
+    }
   }
   
   deleteProduct(id: number | undefined): void {
@@ -453,5 +534,16 @@ export class AdminInventoryComponent implements OnInit {
     this.totalProducts = this.products.length;
     this.totalPages = Math.ceil(this.totalProducts / this.pageSize);
     this.currentPage = 1;
+  }
+  
+  resetForm(): void {
+    this.isEditMode = false;
+    this.editingProductId = null;
+    this.productForm.reset({ price: 0, stock: 0 });
+  }
+  
+  closeModal(): void {
+    const closeButton = document.getElementById('addProductModal')?.querySelector('.btn-close') as HTMLElement;
+    closeButton?.click();
   }
 }

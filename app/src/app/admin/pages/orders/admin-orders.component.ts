@@ -348,6 +348,7 @@ export class AdminOrdersComponent implements OnInit {
       case 1: return 'info';    // Processing
       case 2: return 'primary'; // Shipped
       case 3: return 'success'; // Delivered
+      case 4: return 'danger';  // Cancelled
       default: return 'secondary';
     }
   }

@@ -46,7 +46,7 @@ export class LocationService {
     // Use a CORS proxy to avoid CORS issues
     // In production, you should set up your own proxy server or use a backend API
     return this.http.get(
-      `https://cors-anywhere.herokuapp.com/https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&zoom=14`,
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&zoom=14`,
       { headers: { 'Origin': 'http://localhost:4200' } }
     );
     

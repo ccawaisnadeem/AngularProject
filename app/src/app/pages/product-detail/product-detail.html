@@ -1,0 +1,233 @@
+<!-- product-detail.component.html -->
+<div class="product-detail-container">
+  <!-- Loading state -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading product...</span>
+    </div>
+    <p class="mt-2">Loading product details...</p>
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="error && !loading" class="error-container">
+    <div class="alert alert-danger" role="alert">
+      <i class="bi bi-exclamation-triangle me-2"></i>
+      {{ error }}
+    </div>
+    <button class="btn btn-primary" (click)="goBack()">
+      <i class="bi bi-arrow-left me-1"></i>
+      Back to Products
+    </button>
+  </div>
+
+  <!-- Product details -->
+  <div *ngIf="product && !loading" class="product-content">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+          <a href="#" (click)="goBack(); $event.preventDefault()">Products</a>
+        </li>
+        <li class="breadcrumb-item">{{ product.category }}</li>
+        <li class="breadcrumb-item active" aria-current="page">{{ product.title | slice:0:30 }}...</li>
+      </ol>
+    </nav>
+
+    <div class="row">
+      <!-- Left side - Images -->
+      <div class="col-lg-6 col-md-6">
+        <div class="image-section">
+          <!-- Main image -->
+          <div class="main-image-container" [class.zoomed]="isImageZoomed">
+            <img 
+              [src]="productImages[selectedImageIndex]" 
+              [alt]="product.title"
+              class="main-image"
+              (click)="toggleImageZoom()"
+              (mouseover)="isImageZoomed = true"
+              (mouseleave)="isImageZoomed = false">
+            
+            <!-- Zoom indicator -->
+            <div class="zoom-indicator" *ngIf="!isImageZoomed">
+              <i class="bi bi-search"></i>
+              <span>Hover to zoom</span>
+            </div>
+          </div>
+
+          <!-- Thumbnail images (if multiple images available) -->
+          <div class="thumbnails" *ngIf="productImages.length > 1">
+            <img 
+              *ngFor="let image of productImages; let i = index"
+              [src]="image"
+              [alt]="product.title + ' image ' + (i + 1)"
+              class="thumbnail"
+              [class.active]="selectedImageIndex === i"
+              (click)="selectImage(i)">
+          </div>
+        </div>
+      </div>
+
+      <!-- Right side - Product details -->
+      <div class="col-lg-6 col-md-6">
+        <div class="details-section">
+          <!-- Product title -->
+          <h1 class="product-title">{{ product.title }}</h1>
+
+          <!-- Rating section -->
+          <div class="rating-section">
+            <div class="stars">
+              <span class="star">★</span>
+              <span class="star">★</span>
+              <span class="star">★</span>
+              <span class="star">★</span>
+              <span class="star half">★</span>
+            </div>
+            <span class="rating-text">4.2 out of 5 stars</span>
+            <a href="#" class="review-link">See all reviews</a>
+          </div>
+
+          <!-- Price -->
+          <div class="price-section">
+            <div class="current-price">
+              <span class="currency">$</span>
+              <span class="dollars">{{ formatPrice(product.price).dollars }}</span>
+              <span class="cents">{{ formatPrice(product.price).cents }}</span>
+            </div>
+          </div>
+
+          <!-- Stock status -->
+          <div class="stock-section">
+            <div [class]="'stock-status ' + getStockStatus().class">
+              <i class="bi" [class.bi-check-circle-fill]="getStockStatus().class === 'in-stock'"
+                            [class.bi-exclamation-triangle-fill]="getStockStatus().class === 'low-stock' || getStockStatus().class === 'medium-stock'"
+                            [class.bi-x-circle-fill]="getStockStatus().class === 'out-of-stock'"></i>
+              {{ getStockStatus().text }}
+            </div>
+          </div>
+
+          <!-- Product description -->
+          <div class="description-section">
+            <h3>About this item</h3>
+            <p class="description">{{ product.description }}</p>
+          </div>
+
+          <!-- Product specifications -->
+          <div class="specs-section">
+            <h3>Product Details</h3>
+            <div class="spec-item">
+              <span class="spec-label">Category:</span>
+              <span class="spec-value">{{ product.category }}</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Stock Available:</span>
+              <span class="spec-value">{{ product.stock }} units</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Product ID:</span>
+              <span class="spec-value">#{{ product.id }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Purchase section - Full width below -->
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="purchase-section">
+          <div class="row">
+            <div class="col-lg-8">
+              <!-- Quantity and buttons -->
+              <div class="purchase-controls">
+                <!-- Quantity selector -->
+                <div class="quantity-section">
+                  <label class="quantity-label">Qty:</label>
+                  <div class="quantity-controls">
+                    <button 
+                      class="qty-btn" 
+                      (click)="decrementQuantity()" 
+                      [disabled]="quantity <= 1">
+                      -
+                    </button>
+                    <input 
+                      type="number" 
+                      class="qty-input" 
+                      [(ngModel)]="quantity"
+                      (input)="updateQuantity($event)"
+                      min="1" 
+                      [max]="product.stock">
+                    <button 
+                      class="qty-btn" 
+                      (click)="incrementQuantity()" 
+                      [disabled]="quantity >= product.stock">
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Action buttons -->
+                <div class="action-buttons">
+                  <!-- Add to Cart button -->
+                  <button 
+                    *ngIf="!isInCart()"
+                    class="add-to-cart-btn"
+                    (click)="addToCart()"
+                    [disabled]="addingToCart || product.stock === 0">
+                    <i class="bi" [class.bi-cart-plus]="!addingToCart" [class.bi-hourglass-split]="addingToCart"></i>
+                    {{ addingToCart ? 'Adding to Cart...' : 'Add to Cart' }}
+                  </button>
+
+                  <!-- View in Cart button -->
+                  <button 
+                    *ngIf="isInCart()"
+                    class="view-cart-btn"
+                    (click)="viewCart()">
+                    <i class="bi bi-cart-check"></i>
+                    View in Cart ({{ getCartItemQuantity() }})
+                  </button>
+
+                  <!-- Buy Now button -->
+                  <button 
+                    class="buy-now-btn"
+                    (click)="buyNow()"
+                    [disabled]="addingToCart || product.stock === 0">
+                    <i class="bi bi-lightning"></i>
+                    Buy Now
+                  </button>
+
+                  <!-- Back to Products button -->
+                  <button 
+                    class="back-btn"
+                    (click)="goBack()">
+                    <i class="bi bi-arrow-left"></i>
+                    Back to Products
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-4">
+              <!-- Additional info -->
+              <div class="shipping-info">
+                <h4>Shipping & Returns</h4>
+                
+                <div class="shipping-item">
+                  <i class="bi bi-arrow-return-left"></i>
+                  <span>30-day return policy</span>
+                </div>
+                <div class="shipping-item">
+                  <i class="bi bi-shield-check"></i>
+                  <span>1-year warranty included</span>
+                </div>
+                <div class="shipping-item">
+                  <i class="bi bi-headset"></i>
+                  <span>24/7 customer support</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

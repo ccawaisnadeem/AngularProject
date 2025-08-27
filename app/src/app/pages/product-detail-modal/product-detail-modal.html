@@ -1,0 +1,177 @@
+<!-- product-detail-modal.component.html -->
+<div class="modal-overlay" *ngIf="isVisible" (click)="closeModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()" *ngIf="product">
+    <!-- Close button -->
+    <button class="close-btn" (click)="closeModal()">
+      <i class="bi bi-x-lg"></i>
+    </button>
+
+    <div class="modal-content">
+      <!-- Left side - Images -->
+      <div class="image-section">
+        <!-- Main image -->
+        <div class="main-image-container" [class.zoomed]="isImageZoomed">
+          <img 
+            [src]="productImages[selectedImageIndex]" 
+            [alt]="product.title"
+            class="main-image"
+            (click)="toggleImageZoom()"
+            (mouseover)="isImageZoomed = true"
+            (mouseleave)="isImageZoomed = false">
+          
+          <!-- Zoom indicator -->
+          <div class="zoom-indicator" *ngIf="!isImageZoomed">
+            <i class="bi bi-search"></i>
+            <span>Hover to zoom</span>
+          </div>
+        </div>
+
+        <!-- Thumbnail images (if multiple images available) -->
+        <div class="thumbnails" *ngIf="productImages.length > 1">
+          <img 
+            *ngFor="let image of productImages; let i = index"
+            [src]="image"
+            [alt]="product.title + ' image ' + (i + 1)"
+            class="thumbnail"
+            [class.active]="selectedImageIndex === i"
+            (click)="selectImage(i)">
+        </div>
+      </div>
+
+      <!-- Right side - Product details -->
+      <div class="details-section">
+        <!-- Product title -->
+        <h1 class="product-title">{{ product.title }}</h1>
+
+        <!-- Rating (if you have rating data) -->
+        <div class="rating-section">
+          <div class="stars">
+            <span class="star">★</span>
+            <span class="star">★</span>
+            <span class="star">★</span>
+            <span class="star">★</span>
+            <span class="star half">★</span>
+          </div>
+          <span class="rating-text">4.2 out of 5 stars</span>
+          <a href="#" class="review-link">See all reviews</a>
+        </div>
+
+        <!-- Price -->
+        <div class="price-section">
+          <div class="current-price">
+            <span class="currency">$</span>
+            <span class="dollars">{{ formatPrice(product.price).dollars }}</span>
+            <span class="cents">{{ formatPrice(product.price).cents }}</span>
+          </div>
+          <!-- You can add original price if you have discount data -->
+          <!-- <div class="original-price">List Price: $89.99</div> -->
+        </div>
+
+        <!-- Stock status -->
+        <div class="stock-section">
+          <div [class]="'stock-status ' + getStockStatus().class">
+            <i class="bi" [class.bi-check-circle-fill]="getStockStatus().class === 'in-stock'"
+                          [class.bi-exclamation-triangle-fill]="getStockStatus().class === 'low-stock'"
+                          [class.bi-x-circle-fill]="getStockStatus().class === 'out-of-stock'"></i>
+            {{ getStockStatus().text }}
+          </div>
+        </div>
+
+        <!-- Product description -->
+        <div class="description-section">
+          <h3>About this item</h3>
+          <p class="description">{{ product.description }}</p>
+        </div>
+
+        <!-- Product specifications -->
+        <div class="specs-section">
+          <h3>Product Details</h3>
+          <div class="spec-item">
+            <span class="spec-label">Category:</span>
+            <span class="spec-value">{{ product.category }}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Stock Available:</span>
+            <span class="spec-value">{{ product.stock }} units</span>
+          </div>
+        </div>
+
+        <!-- Purchase section -->
+        <div class="purchase-section">
+          <!-- Quantity selector -->
+          <div class="quantity-section">
+            <label class="quantity-label">Qty:</label>
+            <div class="quantity-controls">
+              <button 
+                class="qty-btn" 
+                (click)="decrementQuantity()" 
+                [disabled]="quantity <= 1">
+                -
+              </button>
+              <input 
+                type="number" 
+                class="qty-input" 
+                [(ngModel)]="quantity"
+                (input)="updateQuantity($event)"
+                min="1" 
+                [max]="product.stock">
+              <button 
+                class="qty-btn" 
+                (click)="incrementQuantity()" 
+                [disabled]="quantity >= product.stock">
+                +
+              </button>
+            </div>
+          </div>
+
+          <!-- Action buttons -->
+          <div class="action-buttons">
+            <!-- Add to Cart button -->
+            <button 
+              *ngIf="!isInCart()"
+              class="add-to-cart-btn"
+              (click)="addToCart()"
+              [disabled]="addingToCart || product.stock === 0">
+              <i class="bi" [class.bi-cart-plus]="!addingToCart" [class.bi-hourglass-split]="addingToCart"></i>
+              {{ addingToCart ? 'Adding to Cart...' : 'Add to Cart' }}
+            </button>
+
+            <!-- View in Cart button (when item is already in cart) -->
+            <button 
+              *ngIf="isInCart()"
+              class="view-cart-btn"
+              (click)="viewCart()">
+              <i class="bi bi-cart-check"></i>
+              View in Cart ({{ getCartItemQuantity() }})
+            </button>
+
+            <!-- Buy Now button -->
+            <button 
+              class="buy-now-btn"
+              (click)="buyNow()"
+              [disabled]="addingToCart || product.stock === 0">
+              <i class="bi bi-lightning"></i>
+              Buy Now
+            </button>
+          </div>
+
+          <!-- Additional info -->
+          <div class="shipping-info">
+            <div class="shipping-item">
+              <i class="bi bi-truck"></i>
+              <span>Free shipping on orders over $25</span>
+            </div>
+            <div class="shipping-item">
+              <i class="bi bi-arrow-return-left"></i>
+              <span>30-day return policy</span>
+            </div>
+            <div class="shipping-item">
+              <i class="bi bi-shield-check"></i>
+              <span>1-year warranty included</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -76,11 +76,8 @@ import { User } from '../../../auth/models/user.model';
                   <td><span class="badge bg-success">Active</span></td>
                   <td>
                     <div class="btn-group">
-                      <button class="btn btn-sm btn-outline-primary" (click)="editUser(user)">
-                        <i class="bi bi-pencil"></i>
-                      </button>
                       <button class="btn btn-sm btn-outline-danger" (click)="deleteUser(user.id)">
-                        <i class="bi bi-trash"></i>
+                        <i class="bi bi-trash"></i> Delete
                       </button>
                     </div>
                   </td>

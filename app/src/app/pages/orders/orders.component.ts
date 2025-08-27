@@ -30,7 +30,7 @@ import { NotificationService } from '../../services/notification.service';
           <i class="bi bi-inbox display-1 text-muted mb-3"></i>
           <h3 class="text-muted">No Orders Yet</h3>
           <p class="text-muted mb-4">Start shopping to see your orders here</p>
-          <a routerLink="/home" class="btn btn-primary">Shop Now</a>
+          <a routerLink="/home" class="btn btn-warning">Shop Now</a>
         </div>
 
         <div *ngIf="!isLoading && !error && orders.length > 0" class="row">
