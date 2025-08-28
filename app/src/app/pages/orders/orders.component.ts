@@ -45,8 +45,7 @@ import { NotificationService } from '../../services/notification.service';
                     <small class="text-muted">{{ order.createdAt | date:'medium' }}</small>
                   </div>
                   <div class="col-md-6 text-end">
-                    <span class="badge" [ngClass]="getOrderStatusClass(order.orderStatus)">{{ getOrderStatusText(order.orderStatus) }}</span>
-                    <span class="badge" [ngClass]="getPaymentStatusClass(order.paymentStatus)">{{ getPaymentStatusText(order.paymentStatus) }}</span>
+                   
                   </div>
                 </div>
               </div>
@@ -72,7 +71,7 @@ import { NotificationService } from '../../services/notification.service';
                      <h6>Total: {{ order.totalAmount | currency }}</h6>
                    </div>
                    <div class="col-md-3 text-end">
-                     <a [routerLink]="['/order-tracking', order.id]" class="btn btn-sm btn-outline-primary">
+                     <a [routerLink]="['/order-tracking', order.id]" class="btn btn-sm btn-outline-warning">
                        <i class="bi bi-truck me-1"></i>Track
                      </a>
                    </div>

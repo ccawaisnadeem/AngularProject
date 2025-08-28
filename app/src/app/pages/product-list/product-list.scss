@@ -20,8 +20,8 @@
 
 .product-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(0,0,0,0.15);
-  border-color: #007bff;
+  box-shadow: 0 6px 15px rgba(22, 21, 21, 0.15);
+  border-color: #facc00;
 }
 
 /* Image container */
@@ -69,7 +69,7 @@
 }
 
 .product-card:hover .product-title {
-  color: #007bff;
+  color: #ffc107;
 }
 
 /* Price display styling */

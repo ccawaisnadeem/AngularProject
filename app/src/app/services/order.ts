@@ -9,6 +9,7 @@ export interface OrderItem {
   productId: number;
   quantity: number;
   priceAtPurchase: number;
+  unitPrice: number;
 }
 
 export interface UserSummary {
@@ -42,23 +43,43 @@ export enum PaymentStatus {
   Refunded = 3
 }
 
+
+
+
+/////////////
+
 export enum ShipmentStatus {
   Pending = 0,
-  InTransit = 1,
-  Delivered = 2,
-  Returned = 3
+  Processing = 1,
+  Shipped = 2,
+  Delivered = 3,
+  Cancelled = 4
 }
 
+
+
 export interface Order {
-  id?: number;
-  userId?: number;
-  user?: UserSummary;
-  orderStatus?: OrderStatus;
-  paymentStatus?: PaymentStatus;
+  id: number;
+  userId: number;
   totalAmount: number;
-  createdAt?: string;
+  orderStatus: OrderStatus;
+  paymentStatus: PaymentStatus;
+  createdAt: string;
   orderItems: OrderItem[];
   shipment?: Shipment;
+  user?: User;
+}
+
+export interface User {
+  id: string;
+  name?: string;
+  fullName?: string;
+  email: string;
+  phoneNumber?: string;
+  address?: string;
+  city?: string;
+  postalCode?: string;
+  role?: string;
 }
 
 @Injectable({

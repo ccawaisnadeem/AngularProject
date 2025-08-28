@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../services/admin.service';
 import { OrderStatus, PaymentStatus, ShipmentStatus } from '../../../services/order';
+import { OrderDetailModalComponent } from './OrderDetailModal';
 
 @Component({
   selector: 'app-admin-orders',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, OrderDetailModalComponent],
   template: `
     <div class="admin-orders">
       <div class="d-flex justify-content-between align-items-center mb-4">
@@ -102,7 +103,7 @@ import { OrderStatus, PaymentStatus, ShipmentStatus } from '../../../services/or
               <thead class="table-light">
                 <tr>
                   <th>Order ID</th>
-                  <th>Customer</th>
+                  <th>Customer ID</th>
                   <th>Date</th>
                   <th>Items</th>
                   <th>Total</th>
@@ -117,7 +118,7 @@ import { OrderStatus, PaymentStatus, ShipmentStatus } from '../../../services/or
                   <td><strong>#{{ order.id }}</strong></td>
                   <td>
                     <div>
-                      <strong>{{ order.user?.name || 'N/A' }}</strong>
+                      <strong>{{  ('User #' + order.userId) || 'N/A' }}</strong>
                       <br><small class="text-muted">{{ order.user?.email || '' }}</small>
                     </div>
                   </td>
@@ -156,21 +157,13 @@ import { OrderStatus, PaymentStatus, ShipmentStatus } from '../../../services/or
                   </td>
                   <td>
                     <div class="btn-group">
-                      <button class="btn btn-sm btn-outline-primary" 
+                      <button class="btn btn-wm btn-outline-warning" 
                               (click)="viewOrderDetails(order)" 
                               title="View Details">
-                        <i class="bi bi-eye"></i>
+                      <i class="bi bi-eye"></i>
+                         View Details
                       </button>
-                      <button class="btn btn-sm btn-outline-info" 
-                              (click)="manageShipment(order)" 
-                              title="Manage Shipment">
-                        <i class="bi bi-truck"></i>
-                      </button>
-                      <button class="btn btn-sm btn-outline-secondary" 
-                              (click)="printOrder(order.id)" 
-                              title="Print">
-                        <i class="bi bi-printer"></i>
-                      </button>
+                     
                     </div>
                   </td>
                 </tr>
@@ -191,6 +184,13 @@ import { OrderStatus, PaymentStatus, ShipmentStatus } from '../../../services/or
         </div>
       </div>
     </div>
+
+    <!-- Order Detail Modal -->
+    <app-order-detail-modal 
+      [orderId]="selectedOrderId"
+      [isVisible]="showOrderDetailModal"
+      (closeEvent)="closeOrderDetailModal()">
+    </app-order-detail-modal>
   `,
   styles: [`
     .table th {
@@ -228,6 +228,10 @@ export class AdminOrdersComponent implements OnInit {
   filterPayment: string = '';
   filterDate: string = '';
   loading: boolean = false;
+
+  // Modal properties
+  showOrderDetailModal: boolean = false;
+  selectedOrderId: number | null = null;
 
   constructor(private adminService: AdminService) {}
 
@@ -290,7 +294,7 @@ export class AdminOrdersComponent implements OnInit {
   }
 
   // Status update methods
-  updateOrderStatus(order: any, event: any) {
+/*  updateOrderStatus(order: any, event: any) {
     const newStatus = parseInt(event.target.value);
     this.adminService.updateOrderStatusOnly(order.id, newStatus).subscribe({
       next: (response: any) => {
@@ -318,7 +322,58 @@ export class AdminOrdersComponent implements OnInit {
         event.target.value = order.paymentStatus;
       }
     });
-  }
+  }*/
+
+  updateOrderStatus(order: any, event: any) {
+  const newStatus = parseInt(event.target.value);
+  
+  this.adminService.updateOrderStatusOnly(order.id, newStatus).subscribe({
+    next: (updatedOrder: any) => {
+      // Update local arrays with complete updated data
+      const index = this.orders.findIndex(o => o.id === order.id);
+      if (index !== -1) {
+        this.orders[index] = updatedOrder;
+      }
+      
+      const filteredIndex = this.filteredOrders.findIndex(o => o.id === order.id);
+      if (filteredIndex !== -1) {
+        this.filteredOrders[filteredIndex] = updatedOrder;
+      }
+      
+      console.log('Order status updated successfully');
+      console.log('Updated shipment status:', updatedOrder.shipment?.status);
+    },
+    error: (error: any) => {
+      console.error('Error updating order status:', error);
+      event.target.value = order.orderStatus;
+    }
+  });
+}
+
+updatePaymentStatus(order: any, event: any) {
+  const newStatus = parseInt(event.target.value);
+  
+  this.adminService.updatePaymentStatus(order.id, newStatus).subscribe({
+    next: (updatedOrder: any) => {
+      // Update local arrays
+      const index = this.orders.findIndex(o => o.id === order.id);
+      if (index !== -1) {
+        this.orders[index] = updatedOrder;
+      }
+      
+      const filteredIndex = this.filteredOrders.findIndex(o => o.id === order.id);
+      if (filteredIndex !== -1) {
+        this.filteredOrders[filteredIndex] = updatedOrder;
+      }
+      
+      console.log('Payment status updated successfully');
+    },
+    error: (error: any) => {
+      console.error('Error updating payment status:', error);
+      event.target.value = order.paymentStatus;
+    }
+  });
+}
 
   // Color methods for styling
   getStatusColor(status: number): string {
@@ -368,19 +423,29 @@ export class AdminOrdersComponent implements OnInit {
     return new Date(date).toLocaleDateString();
   }
 
-  // Action methods
+  // Modal methods
   viewOrderDetails(order: any) {
-    console.log('View order details:', order);
-    // Implement order details modal or navigation
+    this.selectedOrderId = order.id;
+    this.showOrderDetailModal = true;
   }
 
+  closeOrderDetailModal() {
+    this.showOrderDetailModal = false;
+    this.selectedOrderId = null;
+  }
+
+  // Action methods
   manageShipment(order: any) {
     console.log('Manage shipment for order:', order.id);
-    // Implement shipment management modal or navigation
+    // You can implement shipment management modal here
+    // For now, you could also open the order detail modal and focus on shipment
+    this.viewOrderDetails(order);
   }
 
   printOrder(orderId: number) {
     console.log('Print order:', orderId);
-    // Implement print functionality
+    // You could open the order detail modal and trigger print from there
+    this.selectedOrderId = orderId;
+    this.showOrderDetailModal = true;
   }
 }

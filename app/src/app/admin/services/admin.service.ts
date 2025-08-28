@@ -64,6 +64,7 @@ export class AdminService {
       );
   }
 
+
   // Update order status with both order and payment status
   updateOrderStatus(id: number, orderStatus: number, paymentStatus: number): Observable<any> {
     return this.http.put<any>(`${this.API_URL}/Order/${id}/status`, { 
@@ -185,7 +186,7 @@ export class AdminService {
     );
  }
 
-  // Update payment status separately (will need to fetch current order status)
+  /* Update payment status separately (will need to fetch current order status)
   updatePaymentStatus(orderId: number, paymentStatus: number): Observable<any> {
     // First get the current order to preserve order status
     return this.getOrderById(orderId).pipe(
@@ -213,7 +214,7 @@ export class AdminService {
         throw error;
       })
     );
-  }
+  }*/
 
   getShipmentByOrder(orderId: number): Observable<any> {
     return this.http.get<any>(`${this.API_URL}/Shipment/order/${orderId}`)
@@ -224,5 +225,40 @@ export class AdminService {
       })
     );
  }
+ //Add this method to your AdminService class
+
+updateOrderStatusOnly(orderId: number, orderStatus: number): Observable<any> {
+  // First get the current order to preserve payment status
+  return this.getOrderById(orderId).pipe(
+    switchMap((order: any) => {
+      // Use the existing updateOrderStatus method with current payment status
+      return this.updateOrderStatus(orderId, orderStatus, order.paymentStatus);
+    }),
+    // After updating, fetch the updated order to get the latest shipment status
+    switchMap(() => this.getOrderById(orderId)),
+    catchError(error => {
+      console.error(`Error updating order ${orderId} order status:`, error);
+      throw error;
+    })
+  );
+}
+
+updatePaymentStatus(orderId: number, paymentStatus: number): Observable<any> {
+  // First get the current order to preserve order status
+  return this.getOrderById(orderId).pipe(
+    switchMap((order: any) => {
+      // Use the existing updateOrderStatus method with current order status
+      return this.updateOrderStatus(orderId, order.orderStatus, paymentStatus);
+    }),
+    // After updating, fetch the updated order to get the latest data
+    switchMap(() => this.getOrderById(orderId)),
+    catchError(error => {
+      console.error(`Error updating order ${orderId} payment status:`, error);
+      throw error;
+    })
+  );
+}
+
+
 
 }

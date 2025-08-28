@@ -1,6 +1,5 @@
 import { Routes } from '@angular/router';
 import { Home } from './pages/home/home';
-import { Inventory } from './pages/inventory/inventory';
 import { CartComponent } from './pages/cart/cart.component';
 import { CheckoutComponent } from './pages/checkout/checkout.component';
 import { OrderConfirmationComponent } from './pages/order-confirmation/order-confirmation.component';
@@ -22,7 +21,6 @@ export const routes: Routes = [
         component: MainLayoutComponent,
         children: [
             { path: 'home', component: Home },
-            { path: 'inventory', component: Inventory, canActivate: [AuthGuard] },
             { path: 'cart', component: CartComponent, canActivate: [AuthGuard] },
             { path: 'checkout', component: CheckoutComponent, canActivate: [AuthGuard] },
             // Remove AuthGuard from success/cancel routes to avoid redirection issues

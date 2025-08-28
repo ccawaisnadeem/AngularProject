@@ -129,47 +129,60 @@ interface TrackingEvent {
             </div>
 
             <!-- Status Summary -->
-            <div class="card mt-4">
-              <div class="card-header">
-                <h5><i class="bi bi-info-circle me-2"></i>Status Summary</h5>
-              </div>
-              <div class="card-body">
-                <div class="row">
-                  <div class="col-md-6">
-                    <div class="status-item">
-                      <i class="bi bi-check-circle text-success me-2"></i>
-                      <span>Order Placed</span>
+            <!-- Status Summary -->
+<div class="card mt-4">
+  <div class="card-header">
+    <h5><i class="bi bi-info-circle me-2"></i>Status Summary</h5>
+  </div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-6">
+        <!-- Order Placed - Always active -->
+        <div class="status-item active">
+          <i class="bi bi-check-circle text-success me-2"></i>
+          <span>Order Placed</span>
+        </div>
+        
+        <!-- Order Confirmed - Active when order status >= Confirmed -->
+        <div class="status-item" [class.active]="order && order.orderStatus >= OrderStatus.Confirmed">
+          <i class="bi" [ngClass]="order && order.orderStatus >= OrderStatus.Confirmed ? 'bi-check-circle text-success me-2' : 'bi-circle text-muted me-2'"></i>
+          <span>Order Confirmed</span>
+        </div>
+        
+        <!-- Order Shipped - Active when order status >= Shipped -->
+        <div class="status-item" [class.active]="order && order.orderStatus >= OrderStatus.Shipped">
+          <i class="bi" [ngClass]="order && order.orderStatus >= OrderStatus.Shipped ? 'bi-check-circle text-success me-2' : 'bi-circle text-muted me-2'"></i>
+          <span>Order Shipped</span>
+        </div>
+      </div>
+      
+                         <div class="col-md-6">
+                            <!-- In Transit - Active when shipment status >= Processing -->
+                        <div class="status-item" [class.active]="shipment && shipment.status >= ShipmentStatus.Processing">
+                          <i class="bi" [ngClass]="shipment && shipment.status >= ShipmentStatus.Processing ? 'bi-check-circle text-success me-2' : 'bi-circle text-muted me-2'"></i>
+                         <span>In Transit</span>
+                        </div>
+        
+                            <!-- Out for Delivery - Active when shipment status >= Shipped -->
+                        <div class="status-item" [class.active]="shipment && shipment.status >= ShipmentStatus.Shipped">
+                            <i class="bi" [ngClass]="shipment && shipment.status >= ShipmentStatus.Shipped ? 'bi-check-circle text-success me-2' : 'bi-circle text-muted me-2'"></i>
+                         <span>Out for Delivery</span>
+                        </div>
+        
+                       <!-- Delivered - Active when both order status = Delivered AND shipment status = Delivered -->
+                     <div class="status-item" [class.active]="order && order.orderStatus === OrderStatus.Delivered && shipment && shipment.status === ShipmentStatus.Delivered">
+                            <i class="bi" [ngClass]="order && order.orderStatus === OrderStatus.Delivered && shipment && shipment.status === ShipmentStatus.Delivered ? 'bi-check-circle text-success me-2' : 'bi-circle text-muted me-2'"></i>
+                        <span>Delivered</span>
                     </div>
-                                         <div class="status-item" [class.active]="order && order.orderStatus === OrderStatus.Confirmed">
-                       <i class="bi" [class]="order && order.orderStatus === OrderStatus.Confirmed ? 'bi-check-circle text-success' : 'bi-circle text-muted'"></i>
-                       <span>Order Confirmed</span>
-                     </div>
-                     <div class="status-item" [class.active]="order && order.orderStatus === OrderStatus.Shipped">
-                       <i class="bi" [class]="order && order.orderStatus === OrderStatus.Shipped ? 'bi-check-circle text-success' : 'bi-circle text-muted'"></i>
-                       <span>Order Shipped</span>
-                     </div>
-                   </div>
-                   <div class="col-md-6">
-                     <div class="status-item" [class.active]="shipment?.status === ShipmentStatus.InTransit">
-                       <i class="bi" [class]="shipment?.status === ShipmentStatus.InTransit ? 'bi-check-circle text-success' : 'bi-circle text-muted'"></i>
-                       <span>In Transit</span>
-                     </div>
-                     <div class="status-item" [class.active]="order && order.orderStatus === OrderStatus.Delivered">
-                       <i class="bi" [class]="order && order.orderStatus === OrderStatus.Delivered ? 'bi-check-circle text-success' : 'bi-circle text-muted'"></i>
-                       <span>Out for Delivery</span>
-                     </div>
-                     <div class="status-item" [class.active]="shipment?.status === ShipmentStatus.Delivered">
-                       <i class="bi" [class]="shipment?.status === ShipmentStatus.Delivered ? 'bi-check-circle text-success' : 'bi-circle text-muted'"></i>
-                       <span>Delivered</span>
-                     </div>
                   </div>
                 </div>
+               </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    
   `,
   styles: [`
     .order-tracking-page {
@@ -323,35 +336,44 @@ export class OrderTrackingComponent implements OnInit {
       location: 'Online Store',
       description: 'Your order has been successfully placed'
     });
+    if (this.order?.orderStatus === OrderStatus.Confirmed) {
+      events.push({
+        date: this.order?.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0],
+        time: new Date().toLocaleTimeString(),
+        status: 'Order Confirmed',
+        location: 'Online Store',
+        description: `Order will be go for shipment soon`
+      });
+    }
+    if (shipment.status === ShipmentStatus.Processing) {
+      events.push({
+        date: this.order?.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0],
+        time: new Date().toLocaleTimeString(),
+        status: 'Shippment Processing',
+        location: 'Warehouse ',
+        description: `Order will be go for transit`
+      });
+    }
 
     // Add shipment events based on shipment status
-    if (shipment.shipmentDate) {
+     if (shipment.status === ShipmentStatus.Shipped && shipment.shipmentDate) {
       events.push({
         date: shipment.shipmentDate.split('T')[0],
         time: new Date(shipment.shipmentDate).toLocaleTimeString(),
         status: 'Order Shipped',
-        location: 'Warehouse',
+        location: 'Distribution Center',
         description: `Order shipped via ${shipment.courierName || 'Courier'}`
       });
     }
-
-    if (shipment.status === ShipmentStatus.InTransit) {
-      events.push({
-        date: new Date().toISOString().split('T')[0],
-        time: new Date().toLocaleTimeString(),
-        status: 'In Transit',
-        location: 'Distribution Center',
-        description: 'Package is on its way to you'
-      });
-    }
-
+    
+    
     if (shipment.status === ShipmentStatus.Delivered && shipment.deliveryDate) {
       events.push({
         date: shipment.deliveryDate.split('T')[0],
         time: new Date(shipment.deliveryDate).toLocaleTimeString(),
         status: 'Delivered',
         location: 'Your Address',
-        description: 'Package has been delivered'
+        description: 'Package has been successfully delivered'
       });
     }
 
@@ -408,12 +430,15 @@ export class OrderTrackingComponent implements OnInit {
     switch (status) {
       case ShipmentStatus.Pending:
         return 'Pending';
-      case ShipmentStatus.InTransit:
-        return 'In Transit';
+      case ShipmentStatus.Processing:
+        return 'Processing';
+      case ShipmentStatus.Shipped:
+        return 'Shipped';
       case ShipmentStatus.Delivered:
         return 'Delivered';
-      case ShipmentStatus.Returned:
-        return 'Returned';
+      case ShipmentStatus.Cancelled:
+        return 'Cancelled';
+
       default:
         return 'Unknown';
     }
@@ -457,13 +482,15 @@ export class OrderTrackingComponent implements OnInit {
   getShipmentStatusClass(status: ShipmentStatus | undefined): string {
     if (status === undefined || status === null) return 'bg-light text-dark';
     switch (status) {
-      case ShipmentStatus.Pending:
+     case ShipmentStatus.Pending:
         return 'bg-warning text-dark';
-      case ShipmentStatus.InTransit:
+      case ShipmentStatus.Processing:
         return 'bg-info';
+      case ShipmentStatus.Shipped:
+        return 'bg-primary';
       case ShipmentStatus.Delivered:
         return 'bg-success';
-      case ShipmentStatus.Returned:
+      case ShipmentStatus.Cancelled:
         return 'bg-danger';
       default:
         return 'bg-light text-dark';
@@ -475,15 +502,18 @@ export class OrderTrackingComponent implements OnInit {
     return this.shipment?.status === ShipmentStatus.Pending;
   }
 
-  isShipmentInTransit(): boolean {
-    return this.shipment?.status === ShipmentStatus.InTransit;
+  isShipmentProcessing(): boolean {
+    return this.shipment?.status === ShipmentStatus.Processing;
   }
 
   isShipmentDelivered(): boolean {
     return this.shipment?.status === ShipmentStatus.Delivered;
   }
 
-  isShipmentReturned(): boolean {
-    return this.shipment?.status === ShipmentStatus.Returned;
+  isShipmentCancelled(): boolean {
+    return this.shipment?.status === ShipmentStatus.Cancelled;
+  }
+  isShipmentShipped(): boolean {
+    return this.shipment?.status === ShipmentStatus.Shipped;
   }
 }
