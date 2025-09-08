@@ -9,6 +9,7 @@ import { Home } from './pages/home/home';
 import { OrderConfirmationComponent } from './pages/order-confirmation/order-confirmation.component';
 import { OrderTrackingComponent } from './pages/order-tracking/order-tracking.component';
 import { OrdersComponent } from './pages/orders/orders.component';
+import { NotFoundComponent } from './pages/not-found/not-found.component';
 
 export const routes: Routes = [
   { 
@@ -49,6 +50,7 @@ export const routes: Routes = [
     loadChildren: () => import('./admin/admin.routes').then(m => m.ADMIN_ROUTES)
   },
 
-  // fallback
-  { path: '**', redirectTo: '/home' }
+  // 404 page - must be the last route
+  { path: '404', component: NotFoundComponent },
+  { path: '**', redirectTo: '/404' }
 ];

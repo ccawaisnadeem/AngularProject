@@ -124,7 +124,11 @@ export class StripeService {
    */
   createCheckoutSession(data: CheckoutSessionRequest): Observable<CheckoutSessionResponse> {
     console.log('Creating checkout session with API URL:', `${this.apiUrl}/create-checkout-session`);
-    console.log('Request data:', JSON.stringify(data, null, 2));
+    
+    // Only log detailed data in development mode
+    if (!environment.production) {
+      console.log('Request data:', JSON.stringify(data, null, 2));
+    }
     
     // Ensure the request matches the backend expectations exactly
     const validData: CheckoutSessionRequest = {
