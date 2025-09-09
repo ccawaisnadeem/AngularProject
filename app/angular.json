@@ -23,7 +23,10 @@
                              "tsConfig": "tsconfig.app.json",
                              "inlineStyleLanguage": "scss",
                              "assets": [
-                                        { "glob": "**/*", "input": "public" }
+                                        { "glob": "**/*", "input": "public" },
+                                        { "glob": "**/*", "input": "src/assets", "output": "/assets/" },
+                                        { "glob": "favicon.ico", "input": "public", "output": "/" },
+                                        { "glob": "404.html", "input": "src", "output": "/" }
                                        ],
                              "styles": [
                                           "src/styles.scss",

@@ -1,0 +1,7 @@
+# Ignore development files
+node_modules
+.git
+.gitignore
+
+# Don't ignore these files
+!dist

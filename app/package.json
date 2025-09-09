@@ -5,7 +5,7 @@
   "scripts": {
     "start": "ng serve",
     "build": "ng build --configuration production",
-    "vercel-build": "npx ng build --configuration production",
+    "vercel-build": "npx ng build --configuration production && cp dist/app/index.html dist/app/404.html",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "json-server": "json-server --watch db.json --port 3000"
